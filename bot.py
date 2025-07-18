@@ -6,7 +6,7 @@ from telegram.ext import (
     MessageHandler,
     ContextTypes, filters
 )
-API_TOKEN = "7818689272:AAFy6iHLyJaV3BFdCY2-8vcbcf08rry-apg"
+API_TOKEN = os.getenv("COURSE_BOT_TOKEN")
 ADMIN_ID =  5655037405
 
 JSON_PATH = 'data/materiales.json'
