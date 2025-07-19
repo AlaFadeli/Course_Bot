@@ -6,7 +6,7 @@ from telegram.ext import (
     MessageHandler,
     ContextTypes, filters
 )
-API_TOKEN = os.getenv("COURSE_BOT_TOKEN")
+API_TOKEN = os.getenv("COURSE_TOKEN")
 ADMIN_ID =  5655037405
 
 JSON_PATH = 'data/materiales.json'
@@ -100,9 +100,24 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
 async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return await update.message.reply_text("You are not authorized to delete files")
-        if len(context_args) != 3:
-            return await update.message.reply_text("Usage: /delete <module> <category> <filename>")
-        
+    if not context.args:
+        return await update.message.reply_text("Usage: /delete <filename>")
+    filename = " ".join(context.args).strip()
+    materials = load_materials()
+    found = False
+    for module , category in materials.items():
+        if "course" in category  and filename in category["course"]:
+            del category["course"][filename]
+            return await update.message.reply_text(f"File {filename} deleted !!! ")
+            found = True
+            break
+    if found:
+        save_materials(materials)
+
+#async def get_list(update:Update, context=ContextTypes.DEFAULT_TYPE):
+
+
+
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -112,6 +127,7 @@ def main():
     app.add_handler(CommandHandler('get', get_files))
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('delete',delete_file))
     print('Bot is running...')
     app.run_polling()
 
