@@ -12,6 +12,9 @@ ADMIN_ID =  5655037405
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
 
+# Bot logic functions
+
+
 def load_materials():
     if not os.path.exists(JSON_PATH):
         return {}
@@ -22,10 +25,17 @@ def save_materials(data):
     os.makedirs(os.path.dirname(JSON_PATH),exist_ok = True)
     with open(JSON_PATH,'w') as f:
         json.dump(data,f,indent=2)
+
+#def search_files(query:str):
+#    materials = load_materials()
+#    results = []
+#    for module,category in materials.items():
+#        if "course" in category:
+
 #initial start command
 
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text( "WELCOME to the Course Material Bot")
+    await update.message.reply_text( "WELCOME to the Course Material Bot type /help to see available features")
 
 # for upload command always use async 
 
@@ -90,9 +100,11 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
         *ENP Course Material Bot commands:*
         /start -Welcome message
         /help  -show this current help menu
-        /upload <module> <category> -Set target to upload a file (for admins only) 
+        /upload <module> <category> -Sets target to upload a file (for admins only) 
         /get <module> <category> -Retrieve saved files 
-
+        /delete <filename> -deletes file name (for admins only)
+        /search <keyword> -searchs for matching words 
+        /credits - project owner + contact
             note: After /upload ,send your file directly.
         """
     await update.message.reply_text(commands, parse_mode="Markdown")
@@ -114,9 +126,33 @@ async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
     if found:
         save_materials(materials)
 
-#async def get_list(update:Update, context=ContextTypes.DEFAULT_TYPE):
+async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text(" Usage: /search <keyword>")
+    keyword = " ".join(context.args).lower()
+    materials = load_materials()
+    matches = []
+    for module,category in materials.items():
+        for category, files in category.items():
+            for filename in files:
+                if keyword in filename.lower():
+                    matches.append((module,category,filename))
+    if not matches:
+        return await update.message.reply_text(f"No files found for '{keyword}'")
 
+    response = f"*Found {len(matches)} file(s):*\n\n"    
+    for module,category, filename in matches:
+        response += f"📁 {module} | 📘 {category}\n📄 {filename}\n\n"
+    await update.message.reply_text(response, parse_mode="Markdown")    
 
+async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
+    credits_= """
+        - see more projects on my Github : https://github.com/AlaFadeli
+        - Contact me via email :  ala_eddine.fadeli@g.enp.edu.dz
+        - report an issue : enpcourse.bot@gmail.com
+        - project launch date : 2025-07-19  
+            """
+    await update.message.reply_text(credits_ ,parse_mode="Markdown")
 
 # finaly main func
 def main():
@@ -128,6 +164,8 @@ def main():
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('delete',delete_file))
+    app.add_handler(CommandHandler('search', search_command))
+    app.add_handler(CommandHandler('credits',credits_command))
     print('Bot is running...')
     app.run_polling()
 
