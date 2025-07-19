@@ -7,7 +7,7 @@ from telegram.ext import (
     ContextTypes, filters
 )
 API_TOKEN = os.getenv("COURSE_TOKEN")
-ADMIN_ID =  5655037405
+ADMIN_ID =  os.getenc("ADMIN_ID")
 
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
