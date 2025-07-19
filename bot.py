@@ -7,25 +7,21 @@ from telegram.ext import (
     ContextTypes, filters
 )
 API_TOKEN = os.getenv("COURSE_TOKEN")
-ADMIN_ID =  os.getenc("ADMIN_ID")
+ADMIN_ID =  os.getenv("ADMIN_ID")
 
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
 
 # Bot logic functions
-
-
 def load_materials():
     if not os.path.exists(JSON_PATH):
         return {}
     with open(JSON_PATH,'r') as f:
         return json.load(f)
-
 def save_materials(data):
     os.makedirs(os.path.dirname(JSON_PATH),exist_ok = True)
     with open(JSON_PATH,'w') as f:
         json.dump(data,f,indent=2)
-
 #def search_files(query:str):
 #    materials = load_materials()
 #    results = []
@@ -33,12 +29,9 @@ def save_materials(data):
 #        if "course" in category:
 
 #initial start command
-
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text( "WELCOME to the Course Material Bot type /help to see available features")
-
 # for upload command always use async 
-
 async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return await update.message.reply_text('You are not authorized to upload, get a promotion or get used to it :)')
@@ -51,7 +44,6 @@ async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Upload target set to :  {module} > {category}\nNow send me the file!")
 
 # for get file command again we use async
-
 async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("Worng syntax :( , usage:/get <module> <category>")
@@ -91,8 +83,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data[module][category][file_name] = file_id
     save_materials(data)
     # clean and update
-    await update.message.reply_text(f"File saved!\nModule: {module}\nType:{category}\nName:{file_name} ")
-    
+    await update.message.reply_text(f"File saved!\nModule: {module}\nType:{category}\nName:{file_name} ")   
     del upload_state[user_id]
 
 async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
@@ -146,14 +137,15 @@ async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response, parse_mode="Markdown")    
 
 async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
-    credits_= """
-        - see more projects on my Github : https://github.com/AlaFadeli
-        - Contact me via email :  ala_eddine.fadeli@g.enp.edu.dz
-        - report an issue : enpcourse.bot@gmail.com
-        - project launch date : 2025-07-19  
-            """
-    await update.message.reply_text(credits_ ,parse_mode="Markdown")
+            
+    crrds = """
+        *Bot Credits*
+        \\-see more projects on my Github \: https\:\/\/github\\.com/AlaFadeli"
+        \\-Contact me via email \:  ala\_eddine\\.fadeli@g\\.enp\\.edu\\.dz"
+        \\-report an issue \: enpcourse\\.bot@gmail\\.com"
+        \\-project launch date \: 2025\\-07\\-19" """
 
+    await update.message.reply_text(crrds, parse_mode='MarkdownV2')
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
