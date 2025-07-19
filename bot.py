@@ -6,9 +6,24 @@ from telegram.ext import (
     MessageHandler,
     ContextTypes, filters
 )
-API_TOKEN = os.environ.get("COURSE_TOKEN")
-ADMIN_ID =  os.environ.get("ADMIN_ID")
+from datetime import datetime,time
+import sys
+now = datetime.now().time()
+if not (time(8,0) <= now <= time(23,59)):
+    print(" Bot inactive , Runs only between 8AM and 12AM")
+from dotenv import load_dotenv
+load_dotenv()
 
+
+def load_token_file(path="token.txt"):
+    with open(path,"r") as file:
+        return file.read().strip()
+API_TOKEN=load_token_file()
+
+def load_admins_file(path="admins.txt"):
+    with open(path,"r") as file:
+        return [int(line.strip()) for line in file if line.strip().isdigit()]
+ADMIN_ID=load_admins_file()
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
 
@@ -33,7 +48,7 @@ async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text( "WELCOME to the Course Material Bot type /help to see available features")
 # for upload command always use async 
 async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+    if update.effective_user.id not in ADMIN_ID:
         return await update.message.reply_text('You are not authorized to upload, get a promotion or get used to it :)')
     
     if len(context.args) != 2:
@@ -101,7 +116,7 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(commands, parse_mode="Markdown")
 
 async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
+    if update.effective_user.id not in ADMIN_ID:
         return await update.message.reply_text("You are not authorized to delete files")
     if not context.args:
         return await update.message.reply_text("Usage: /delete <filename>")
