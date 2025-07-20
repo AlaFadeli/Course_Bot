@@ -6,11 +6,13 @@ from telegram.ext import (
     MessageHandler,
     ContextTypes, filters
 )
-from datetime import datetime,time
+from datetime import datetime, time
 import sys
 now = datetime.now().time()
-if not (time(8,0) <= now <= time(23,59)):
+if not (time(8,0) <= now <= time(23,7,59)):
     print(" Bot inactive , Runs only between 8AM and 12AM")
+
+    sys.exit()
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -23,7 +25,10 @@ API_TOKEN=load_token_file()
 def load_admins_file(path="admins.txt"):
     with open(path,"r") as file:
         return [int(line.strip()) for line in file if line.strip().isdigit()]
+
 ADMIN_ID=load_admins_file()
+if ADMIN_ID:
+    print("ADMINS IDs loaded:", ADMIN_ID)
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
 
@@ -75,7 +80,7 @@ async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     # only admins can upload : 
-    if user_id != ADMIN_ID:
+    if user_id not in  ADMIN_ID:
         await update.message.reply_text("Only the admins can play with files :)  respect yourself !!!!")
         return 
     if user_id not in upload_state:
@@ -124,8 +129,20 @@ async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
     materials = load_materials()
     found = False
     for module , category in materials.items():
-        if "course" in category  and filename in category["course"]:
-            del category["course"][filename]
+        if "COURSE" in category  and filename in category["COURSE"]:
+            del category["COURSE"][filename]
+            return await update.message.reply_text(f"File {filename} deleted !!! ")
+        if "TD" in category  and filename in category["TD"]:
+            del category["TD"][filename]
+            return await update.message.reply_text(f"File {filename} deleted !!! ")
+        if "TP" in category  and filename in category["TP"]:
+            del category["TP"][filename]
+            return await update.message.reply_text(f"File {filename} deleted !!! ")
+        if "CC" in category  and filename in category["CC"]:
+            del category["CC"][filename]
+            return await update.message.reply_text(f"File {filename} deleted !!! ")
+        if "EXAM" in category  and filename in category["EXAM"]:
+            del category["EXAM"][filename]
             return await update.message.reply_text(f"File {filename} deleted !!! ")
             found = True
             break
@@ -161,18 +178,27 @@ async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
         \\-project launch date \: 2025\\-07\\-19" """
 
     await update.message.reply_text(crrds, parse_mode='MarkdownV2')
+
+async def admin_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    print("Your ID:", user_id)
+    print("Admin list", ADMIN_ID)
+    if user_id not in ADMIN_ID:
+        await update.message.reply_text("You are not authorized to view admin list")    
+    return await update.message.reply_text(" You are  authorized, admin")    
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('upload', upload))
-    app.add_handler(CommandHandler('get', get_files))
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-    app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('start',start))
+    app.add_handler(CommandHandler('upload',upload))
+    app.add_handler(CommandHandler('get',get_files))
+    app.add_handler(MessageHandler(filters.Document.ALL,handle_document))
+    app.add_handler(CommandHandler('help',help_command))
     app.add_handler(CommandHandler('delete',delete_file))
-    app.add_handler(CommandHandler('search', search_command))
+    app.add_handler(CommandHandler('search',search_command))
     app.add_handler(CommandHandler('credits',credits_command))
+    app.add_handler(CommandHandler('admin', admin_command))
     print('Bot is running...')
     app.run_polling()
 
