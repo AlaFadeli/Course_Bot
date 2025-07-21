@@ -1,4 +1,5 @@
 import json 
+import asyncpg
 import os
 from telegram import Update, Document
 from telegram.ext import (
@@ -13,10 +14,6 @@ if not (time(8,0) <= now <= time(23,7,59)):
     print(" Bot inactive , Runs only between 8AM and 12AM")
 
     sys.exit()
-from dotenv import load_dotenv
-load_dotenv()
-
-
 def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
@@ -31,22 +28,46 @@ if ADMIN_ID:
     print("ADMINS IDs loaded:", ADMIN_ID)
 JSON_PATH = 'data/materiales.json'
 upload_state = {}
+def get_base(path="databaseurl.txt"):
+    with open(path,"r") as f:
+        return f.read().strip()
+DATABASE_URL = get_base() # Make sure it's set in Railway
+if DATABASE_URL:
+    print("url:", DATABASE_URL)
+async def connect_db():
+    return await asyncpg.connect(DATABASE_URL)
 
-# Bot logic functions
-def load_materials():
-    if not os.path.exists(JSON_PATH):
-        return {}
-    with open(JSON_PATH,'r') as f:
-        return json.load(f)
-def save_materials(data):
-    os.makedirs(os.path.dirname(JSON_PATH),exist_ok = True)
-    with open(JSON_PATH,'w') as f:
-        json.dump(data,f,indent=2)
-#def search_files(query:str):
-#    materials = load_materials()
-#    results = []
-#    for module,category in materials.items():
-#        if "course" in category:
+#HELPER FUNCTIONS for database
+
+async def save_material(module, category, file_name, file_id):
+    conn = await connect_db()
+    await conn.execute("""
+        INSERT INTO materials (module, category, file_name, file_id)
+        VALUES ($1, $2, $3, $4)
+    """, module, category, file_name, file_id)
+    await conn.close()
+
+async def get_all_materials():
+    conn = await connect_db()
+    rows = await conn.fetch("SELECT * FROM materials")
+    await conn.close()
+    return rows
+
+async def delete_material_by_filename(file_name):
+    conn = await connect_db()
+    result = await conn.execute("""
+        DELETE FROM materials WHERE file_name = $1
+    """, file_name)
+    await conn.close()
+    return result
+
+async def find_material_by_filename(file_name):
+    conn = await connect_db()
+    row = await conn.fetchrow("""
+        SELECT * FROM materials WHERE file_name = $1
+    """, file_name)
+    await conn.close()
+    return row
 
 #initial start command
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
@@ -68,13 +89,12 @@ async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
         return await update.message.reply_text("Worng syntax :( , usage:/get <module> <category>")
     module, category = context.args
-    data = load_materials()
-
-    if module not in data or category not in data[module]:
-        return await update.message.reply_text("No files found in this category. !!!")    
-
-    for name, file_id in data[module][category].items():
-        await update.message.reply_document(document=file_id, caption=name)
+    rows = await get_all_materials()
+    matched = [row for row in rows if row ['module'] == module and row['category'] == category]
+    if not matched:
+        return await update.message.reply_text("No files found in this category")
+    for row in matched:
+        await update.message.reply_document(document=row['file_id'], caption=row['file_name'])
     # as usual for ANY command : async
          
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -93,25 +113,19 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     module,category = upload_state[user_id]
     file_id = document.file_id
     file_name = document.file_name or f"file_{file_id[:6]}"
-    
-    data = load_materials()
-    if module not in data:
-        data[module] = {}
-    if category not in data[module]:
-        data[module][category] = {}
-    
-    data[module][category][file_name] = file_id
-    save_materials(data)
-    # clean and update
-    await update.message.reply_text(f"File saved!\nModule: {module}\nType:{category}\nName:{file_name} ")   
-    del upload_state[user_id]
+    await save_material(module, category, file_name, file_id)
 
+    await update.message.reply_text(f"File Saved!\nModule:{module}\nType: {category}\nName:{file_name}")
+    # clean and update
+    await update.message.reply_text(f"File saved!\nModule: {module}\nType:{category}\nName:{file_name}")   
+    del upload_state[user_id]
 async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
     commands = """
         *ENP Course Material Bot commands:*
         /start -Welcome message
         /help  -show this current help menu
         /upload <module> <category> -Sets target to upload a file (for admins only) 
+        /done  -- resets upload state -Do it after done from uploading files
         /get <module> <category> -Retrieve saved files 
         /delete <filename> -deletes file name (for admins only)
         /search <keyword> -searchs for matching words 
@@ -119,53 +133,29 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
             note: After /upload ,send your file directly.
         """
     await update.message.reply_text(commands, parse_mode="Markdown")
-
 async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id not in ADMIN_ID:
         return await update.message.reply_text("You are not authorized to delete files")
     if not context.args:
         return await update.message.reply_text("Usage: /delete <filename>")
     filename = " ".join(context.args).strip()
-    materials = load_materials()
-    found = False
-    for module , category in materials.items():
-        if "COURSE" in category  and filename in category["COURSE"]:
-            del category["COURSE"][filename]
-            return await update.message.reply_text(f"File {filename} deleted !!! ")
-        if "TD" in category  and filename in category["TD"]:
-            del category["TD"][filename]
-            return await update.message.reply_text(f"File {filename} deleted !!! ")
-        if "TP" in category  and filename in category["TP"]:
-            del category["TP"][filename]
-            return await update.message.reply_text(f"File {filename} deleted !!! ")
-        if "CC" in category  and filename in category["CC"]:
-            del category["CC"][filename]
-            return await update.message.reply_text(f"File {filename} deleted !!! ")
-        if "EXAM" in category  and filename in category["EXAM"]:
-            del category["EXAM"][filename]
-            return await update.message.reply_text(f"File {filename} deleted !!! ")
-            found = True
-            break
-    if found:
-        save_materials(materials)
-
+    deleted = await delete_material_by_filename(file_name)
+    if deleted:
+        await update.message.reply_text(f"File `{file_name}` deleted !!!")
+    else:
+        await update.message.reply_text(f"No file named `{file_name}` found.")
 async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
     if not context.args:
         return await update.message.reply_text(" Usage: /search <keyword>")
     keyword = " ".join(context.args).lower()
-    materials = load_materials()
-    matches = []
-    for module,category in materials.items():
-        for category, files in category.items():
-            for filename in files:
-                if keyword in filename.lower():
-                    matches.append((module,category,filename))
+    matches = await delete_material_by_filename()
     if not matches:
-        return await update.message.reply_text(f"No files found for '{keyword}'")
+        update.message.reply_text(f"No files found for `{keyword}`")
+        
+    response = f"*Found {len(matches)} file(s):*\n\n"
+    for row in matches:
+        response += f"📁{row['module']} --> 📘{row['category']} -->📄{row['category']}"
 
-    response = f"*Found {len(matches)} file(s):*\n\n"    
-    for module,category, filename in matches:
-        response += f"📁 {module} | 📘 {category}\n📄 {filename}\n\n"
     await update.message.reply_text(response, parse_mode="Markdown")    
 
 async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
@@ -186,6 +176,27 @@ async def admin_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     if user_id not in ADMIN_ID:
         await update.message.reply_text("You are not authorized to view admin list")    
     return await update.message.reply_text(" You are  authorized, admin")    
+
+async def list_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    materials = load_materials()
+    message_lines = ["*Uploaded Materials\:*"]
+    for module,category in materials.items():
+        for category, files in category.items():
+            for filename in files :
+                if not filename:
+                    await update.message.reply_text("No files available")
+                line = f" {module} -- {category} -- {filename}"
+                message_lines.append(line,start=1)
+    message = "\n".join(message_lines)
+    await update.message.reply_text(message, parse_mode="MarkdownV2")
+
+async def done_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if user_id in upload_state:
+        del upload_state[user_id]
+        await update.message.reply_text("Upload session ended.")
+    else:
+        await update.message.reply_text("No active upload  session")
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -199,6 +210,8 @@ def main():
     app.add_handler(CommandHandler('search',search_command))
     app.add_handler(CommandHandler('credits',credits_command))
     app.add_handler(CommandHandler('admin', admin_command))
+    app.add_handler(CommandHandler('list', list_command))
+    app.add_handler(CommandHandler('done', done_command))
     print('Bot is running...')
     app.run_polling()
 
