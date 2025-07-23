@@ -1,4 +1,5 @@
 import json 
+import shlex
 import asyncpg
 import os
 from telegram import Update, Document
@@ -56,8 +57,8 @@ async def get_all_materials():
 async def delete_material_by_filename(file_name):
     conn = await connect_db()
     result = await conn.execute("""
-        DELETE FROM materials WHERE file_name = $1
-    """, file_name)
+        DELETE FROM materials WHERE file_name =  $1
+    """, file_name.strip())
     await conn.close()
     return result
 
@@ -114,6 +115,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_id = document.file_id
     file_name = document.file_name or f"file_{file_id[:6]}"
     await save_material(module, category, file_name, file_id)
+    
 
     await update.message.reply_text(f"File Saved!\nModule:{module}\nType: {category}\nName:{file_name}")
     # clean and update
@@ -138,17 +140,25 @@ async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text("You are not authorized to delete files")
     if not context.args:
         return await update.message.reply_text("Usage: /delete <filename>")
-    filename = " ".join(context.args).strip()
-    deleted = await delete_material_by_filename(file_name)
-    if deleted:
-        await update.message.reply_text(f"File `{file_name}` deleted !!!")
-    else:
-        await update.message.reply_text(f"No file named `{file_name}` found.")
+    file_names = shlex.split(" ".join(context.args))
+    if not file_names:
+        return await update.message.reply_text("Usage: /delete <filename1> <filename2>....")
+    responses = []
+    for file_name in file_names:
+        file_name = file_name.strip()
+        deleted = await delete_material_by_filename(file_name)
+        if deleted :
+            responses.append(f"Deleted `{file_name}`")
+        else:
+            responses.append(f"Not found `{file_name}`")
+
+    await update.message.reply_text("\n".join(responses), parse_mode="Markdown")
 async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
     if not context.args:
         return await update.message.reply_text(" Usage: /search <keyword>")
     keyword = " ".join(context.args).lower()
-    matches = await delete_material_by_filename()
+    file_name = document.file_name or f"file_{file_id[:6]}"
+    matches = await delete_material_by_filename(file_name)
     if not matches:
         update.message.reply_text(f"No files found for `{keyword}`")
         
