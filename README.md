@@ -31,6 +31,37 @@ Built using Python, PostgreSQL (Supabase or NeonDB), and `python-telegram-bot`.
   - View all registered users  
   - Upload files 
 ---
+<<<<<<< HEAD
+=======
+
+## 🚀 Tech Stack
+
+- **Language:** Python 3.11  
+- **Bot Framework:** [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot)  
+- **Database:** Supabase / NeonDB (PostgreSQL)  
+- **ORM:** asyncpg  
+- **Deployment:** [Railway](https://railway.app)  
+
+---
+
+## 📸 Demo Preview
+
+> *(Add a screenshot or logo of your bot here)*
+
+---
+
+## 🎓 Made for ENP Students
+
+This bot is tailored for ENP students to:
+
+- Share academic resources  
+- Organize files easily  
+- Access documents instantly via Telegram
+
+---
+
+## 📫 Contact
+>>>>>>> refs/remotes/origin/main
 
 ## 🚀 Tech Stack
 
