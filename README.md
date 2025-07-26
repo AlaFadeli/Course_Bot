@@ -46,7 +46,7 @@ Built using Python, PostgreSQL (Supabase or NeonDB), and `python-telegram-bot`.
 
 ## 📸 Demo Preview
 
-![start](/start.gif)
+![start](start.gif.mp4)
 
 ---
 
