@@ -75,8 +75,7 @@ This bot is tailored for ENP students to:
 
 ## 📸 Demo Preview
 
-> *(Add a screenshot or logo of your bot here)*
-
+![start](animation.gif.mp4)
 ---
 
 ## 🎓 Made for ENP Students
