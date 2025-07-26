@@ -42,10 +42,14 @@ graph TD
 
 ## Demo Preview
 
+### Start:
+![Start](/start.gif)
+
 ## Contact
 - **Bot:**
 [@ENPcoursebot](https://t.me/ENPcoursebot)
-- **Maintainer:** [Fadeli Ala Eddine]
+- **email**:
+[course_bot](enpcourse.bot@gmail.com)
 
 
 
