@@ -46,7 +46,7 @@ Built using Python, PostgreSQL (Supabase or NeonDB), and `python-telegram-bot`.
 
 ## 📸 Demo Preview
 
-> *(Add a screenshot or logo of your bot here)*
+![start](/start.gif)
 
 ---
 
