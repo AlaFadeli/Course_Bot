@@ -1,17 +1,51 @@
-# 📚 ENP CourseBot
+# ENP Course Bot
 
-A Telegram bot developed to help students at the École Nationale Polytechnique (ENP) quickly access and manage shared academic materials — like TDs, TPs, courses, and CCs — using intuitive commands and search functionality.
-
-> 🧠 *This project was born from a random idea and built to support fellow students with quick, organized access to resources.*
+A Telegram bot designed to help ENP students store, retrieve, and share academic materials efficiently.
+Built using Python, PostgreSQL, and `python-telegram-bot`.
 
 ---
 
-## ✨ Features
+## Features
 
-- 📁 View Available Files: List all uploaded files by category.
-- 🔍 Search: Quickly search files by keyword.
-- 📁 Upload: Admins can set a target for uploading files by obeying a certain syntax: /upload <\module> <\category>.
-- 🗑️ Delete: Admins can delete unwanted files directly from the bot.
-- 💾 Persistent Storage: All data is saved in a structured JSON file.
-- 🧠 Organized Structure: Files are grouped by subject and material type (e.g., TD, TP, Course, CC).
-- 🤖 Built using Python & python-telegram-bot.
+- `/upload` --Upload multiple academic materials (admin only)
+- `/get` --Retrieve files contained in a module/type
+- `/search` --Search files by name or keyword
+- `/delete` --Delete files (admin only)
+- `/register`--Register using your email (rquired before usage)
+
+---
+
+## How it works?
+
+```mermaid
+graph TD
+  A[User] -->|Sends Command| B(Bot)
+  B --> C{Is Registered?}
+  C -->|Yes| D(Query Database)
+  C -->|No| E(Send Access Denied Message)
+  D --> F(Return Result / Perform Action)
+```
+
+---
+## Access Control
+
+- Registered users can :
+  - get files
+  - search files
+  - list directories
+- Admins can:
+  - upload new files
+  - delete files
+  - check registered list
+
+## Tech Stack
+
+## Demo Preview
+
+## Contact
+- **Bot:**
+[@ENPcoursebot](https://t.me/ENPcoursebot)
+- **Maintainer:** [Fadeli Ala Eddine]
+
+
+
