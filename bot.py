@@ -1,25 +1,26 @@
 import json 
+import asyncio
 import shlex
 import asyncpg
 import os
 from telegram import Update, Document
 from telegram.ext import (
     ApplicationBuilder, CommandHandler,
-    MessageHandler,
+    MessageHandler,ConversationHandler,
     ContextTypes, filters
 )
+from secretspy import GMAIL_USER, GMAIL_APP_PASSWORD
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime, time
 import sys
-now = datetime.now().time()
-if not (time(8,0) <= now <= time(23,7,59)):
-    print(" Bot inactive , Runs only between 8AM and 12AM")
-
-    sys.exit()
+import random 
+import re
+from functools import wraps
 def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
 API_TOKEN=load_token_file()
-
 def load_admins_file(path="admins.txt"):
     with open(path,"r") as file:
         return [int(line.strip()) for line in file if line.strip().isdigit()]
@@ -37,7 +38,34 @@ if DATABASE_URL:
     print("url:", DATABASE_URL)
 async def connect_db():
     return await asyncpg.connect(DATABASE_URL)
+ASK_EMAIL, ASK_CODE = range(2)
+#async def connect_db():
+#    global db_conn
+#    db_conn = await asyncpg.connect(DATABASE_URL)
+def send_verification_email(to_email,code):
+    msg = MIMEText(f"""\
+    Hello,
+    Thank for registering with the ENP Course Assistant Bot.
+    Yourverification code is: {code}"
 
+    It's valid for 10 minutes. if you did not request this, you can simply ignore the email.
+    This is an automated email. Please don't reply.
+
+
+
+    Best regards,
+    ENP bot developer
+    """)
+    msg['Subject'] = "ENP  Bot Verification Code"
+    msg['From'] = GMAIL_USER
+    msg['To'] = to_email
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com",465) as server:
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+            print(f"Email sent to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 #HELPER FUNCTIONS for database
 
 async def save_material(module, category, file_name, file_id):
@@ -69,24 +97,52 @@ async def find_material_by_filename(file_name):
     """, file_name)
     await conn.close()
     return row
-
+async def is_verified(user_id, db_conn):
+    result = await db_conn.fetchrow(
+    "SELECT is_verified FROM verified_users WHERE user_id = $1"
+    ,user_id)
+    return result and result["is_verified"]
+def registered_only(func):
+    @wraps(func)
+    async def wrapper(update:Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
+        db_conn =await connect_db()
+        if not await is_verified(user_id, db_conn):
+            await update.messagee.reply_text("You are not registered. Use /register first.")
+            return
+        return await func(update, context, *args, **kwargs)
+    return wrapper        
 #initial start command
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text( "WELCOME to the Course Material Bot type /help to see available features")
+    user_id = update.effective_user.id
+    db_conn = await connect_db()
+    await update.message.reply_text( """👋 WELCOME, future Hunter of Knowledge!
+⚙️ Type /help to explore tools  
+📝 Don’t forget to /register before using commands.""")
 # for upload command always use async 
+@registered_only
 async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     if update.effective_user.id not in ADMIN_ID:
         return await update.message.reply_text('You are not authorized to upload, get a promotion or get used to it :)')
-    
+    db_conn = await connect_db()
+    user_id = update.effective_user.id
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     if len(context.args) != 2:
         return await update.message.reply_text("Wrong sytanx :( , usage: /upload <module> <category> ")
 
     module,category = context.args
     upload_state[update.effective_user.id] = (module,category)
     await update.message.reply_text(f"Upload target set to :  {module} > {category}\nNow send me the file!")
-
+    
 # for get file command again we use async
+@registered_only
 async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    db_conn = await connect_db()
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     if len(context.args) != 2:
         return await update.message.reply_text("Worng syntax :( , usage:/get <module> <category>")
     module, category = context.args
@@ -97,9 +153,14 @@ async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
     for row in matched:
         await update.message.reply_document(document=row['file_id'], caption=row['file_name'])
     # as usual for ANY command : async
-         
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    db_conn = await connect_db()
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
+    user_id = update.effective_user.id    
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     # only admins can upload : 
     if user_id not in  ADMIN_ID:
         await update.message.reply_text("Only the admins can play with files :)  respect yourself !!!!")
@@ -107,21 +168,27 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in upload_state:
         await update.message.reply_text("Use upload <module> <type> first.")
         return
+    list_docs = []
     document = update.message.document
+    list_docs.append(document)
     if not document:
-        await update.message.reply_text("No document found in the message.....")
-        return
+        return await update.message.reply_text("No document found in the message.....")
     module,category = upload_state[user_id]
     file_id = document.file_id
     file_name = document.file_name or f"file_{file_id[:6]}"
-    await save_material(module, category, file_name, file_id)
-    
-
-    await update.message.reply_text(f"File Saved!\nModule:{module}\nType: {category}\nName:{file_name}")
+    if upload_state[user_id]:
+        for document in list_docs:
+            await save_material(module, category, file_name, file_id)
+            await update.message.reply_text(f"File Saved!\nModule:{module}\nType: {category}\nName:{file_name}")
     # clean and update
-    await update.message.reply_text(f"File saved!\nModule: {module}\nType:{category}\nName:{file_name}")   
-    del upload_state[user_id]
 async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    db_conn = await connect_db()
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
+    user_id = update.effective_user.id    
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     commands = """
         *ENP Course Material Bot commands:*
         /start -Welcome message
@@ -135,7 +202,12 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
             note: After /upload ,send your file directly.
         """
     await update.message.reply_text(commands, parse_mode="Markdown")
+@registered_only       
 async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    db_conn = await connect_db()
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     if update.effective_user.id not in ADMIN_ID:
         return await update.message.reply_text("You are not authorized to delete files")
     if not context.args:
@@ -153,23 +225,31 @@ async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
             responses.append(f"Not found `{file_name}`")
 
     await update.message.reply_text("\n".join(responses), parse_mode="Markdown")
+@registered_only       
 async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
+    db_conn = await asyncpg.connect(DATABASE_URL)
+    user_id = update.effective_user.id    
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     if not context.args:
         return await update.message.reply_text(" Usage: /search <keyword>")
     keyword = " ".join(context.args).lower()
-    file_name = document.file_name or f"file_{file_id[:6]}"
-    matches = await delete_material_by_filename(file_name)
-    if not matches:
-        update.message.reply_text(f"No files found for `{keyword}`")
+    rows = await get_all_materials()
+    matched = [row for row in rows if keyword in row['file_name']] 
+    if not matched:
+        await update.message.reply_text(f"No files found for `{keyword}`")
         
-    response = f"*Found {len(matches)} file(s):*\n\n"
-    for row in matches:
-        response += f"📁{row['module']} --> 📘{row['category']} -->📄{row['category']}"
+    response = f"*Found {len(matched)} file(s):*\n\n"
+    for row in matched:
+        response += f"📁{row['module']} --> 📘{row['category']} -->📄{row['category']} --> {row['file_name']}\n"
 
     await update.message.reply_text(response, parse_mode="Markdown")    
 
-async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
-            
+async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):           
+    user_id = update.effective_user.id
+    db_conn = await connect_db()
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     crrds = """
         *Bot Credits*
         \\-see more projects on my Github \: https\:\/\/github\\.com/AlaFadeli"
@@ -179,27 +259,29 @@ async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(crrds, parse_mode='MarkdownV2')
 
+@registered_only       
 async def admin_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id    
+    if not await is_verified(user_id, db_conn):
+        return await update.message.reply_text(" You need to register first using /register")
     user_id = update.effective_user.id
     print("Your ID:", user_id)
     print("Admin list", ADMIN_ID)
     if user_id not in ADMIN_ID:
         await update.message.reply_text("You are not authorized to view admin list")    
     return await update.message.reply_text(" You are  authorized, admin")    
-
+@registered_only       
 async def list_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    materials = load_materials()
-    message_lines = ["*Uploaded Materials\:*"]
-    for module,category in materials.items():
-        for category, files in category.items():
-            for filename in files :
-                if not filename:
-                    await update.message.reply_text("No files available")
-                line = f" {module} -- {category} -- {filename}"
-                message_lines.append(line,start=1)
-    message = "\n".join(message_lines)
-    await update.message.reply_text(message, parse_mode="MarkdownV2")
-
+    user_id = update.effective_user.id    
+    module, category = context.args 
+    if len(context.args) != 2:
+        return await update.message.reply_text("Worng syntax :( , usage: /search <module> <category>")
+    rows = await get_all_materials()
+    message = "A list of available files in this module:"
+    matched = [row for row in rows if row ['module'] == module and row['category'] == category]
+    for row in matched :
+        await update.message.reply_text(f"--> {row['file_name']}\n")
+@registered_only       
 async def done_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id in upload_state:
@@ -207,6 +289,55 @@ async def done_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Upload session ended.")
     else:
         await update.message.reply_text("No active upload  session")
+
+
+async def receive_email(update:Update, context: ContextTypes.DEFAULT_TYPE):
+    email = update.message.text.strip().lower()
+    if not re.fullmatch(r"[a-z0-9._%+-]+@g\.enp\.edu\.dz", email):
+        await update.message.reply_text("That doesn't look like a valid ENP  email address ...")
+        return ASK_EMAIL
+    code = str(random.randint(100000,999999))
+    context.user_data['email'] = email
+    context.user_data['code'] = code
+    send_verification_email(email,code)
+    await update.message.reply_text(f"Verification code sent to `{email}`. Please reply with it to complete verification", parse_mode='Markdown')
+    return ASK_CODE
+async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_code = update.message.text.strip()
+    correct_code = context.user_data.get('code')
+    if user_code == correct_code:
+        await update.message.reply_text("Email verified successfully, enjoy the bot ENP warior !")
+        user_id = update.effective_user.id
+        username = update.effective_user.username or "Unknown"
+        email = context.user_data["email"]
+        db_conn= await connect_db()
+        await db_conn.execute("""
+              
+            INSERT INTO verified_users(user_id, username, email, is_verified, verified_at)
+            VALUES ($1, $2, $3, TRUE, now()) 
+            ON CONFLICT (user_id)  DO UPDATE SET username = EXCLUDED.username,
+                                                 email = EXCLUDED.email,
+                                                 is_verified = TRUE,
+                                                 verified_at = now()
+        """,
+        user_id, username, email)
+        await db_conn.close()
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text("Wrong code. Please try again")
+
+        return ASK_CODE
+
+async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please enter your email adress")
+    return ASK_EMAIL
+conv_handler = ConversationHandler(entry_points= [CommandHandler("register", register_command)],
+                                states = {
+                                    ASK_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_email)],
+                                    ASK_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_code)],
+                                },
+                                fallbacks = [],
+)    
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -222,9 +353,8 @@ def main():
     app.add_handler(CommandHandler('admin', admin_command))
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
+    app.add_handler(conv_handler)
     print('Bot is running...')
     app.run_polling()
-
-
 if __name__ == "__main__":
     main()
