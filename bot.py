@@ -9,7 +9,7 @@ from telegram.ext import (
     MessageHandler,ConversationHandler,
     ContextTypes, filters
 )
-from secretspy import GMAIL_USER, GMAIL_APP_PASSWORD
+#from secretspy import GMAIL_USER, GMAIL_APP_PASSWORD
 import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime, time
