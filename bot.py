@@ -20,19 +20,19 @@ from functools import wraps
 def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
-API_TOKEN=load_token_file()
-def load_admins_file(path="admins.txt"):
-    with open(path,"r") as file:
-        return [int(line.strip()) for line in file if line.strip().isdigit()]
-ADMIN_ID=load_admins_file()
-if ADMIN_ID:
-    print("ADMINS IDs loaded:", ADMIN_ID)
-JSON_PATH = 'data/materiales.json'
+API_TOKEN= os.getenv("API_TOKEN")
+#def load_admins_file(path="admins.txt"):
+#    with open(path,"r") as file:
+#        return [int(line.strip()) for line in file if line.strip().isdigit()]
+#ADMIN_ID=load_admins_file()
+#if ADMIN_ID:
+#    print("ADMINS IDs loaded:", ADMIN_ID)
+#JSON_PATH = 'data/materiales.json'
 upload_state = {}
-def get_base(path="databaseurl.txt"):
-    with open(path,"r") as f:
-        return f.read().strip()
-DATABASE_URL = get_base() # Make sure it's set in Railway
+#def get_base(path="databaseurl.txt"):
+#    with open(path,"r") as f:
+#        return f.read().strip()
+DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     print("url:", DATABASE_URL)
 async def connect_db():
