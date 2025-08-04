@@ -24,7 +24,6 @@ API_TOKEN=load_token_file()
 def load_admins_file(path="admins.txt"):
     with open(path,"r") as file:
         return [int(line.strip()) for line in file if line.strip().isdigit()]
-
 ADMIN_ID=load_admins_file()
 if ADMIN_ID:
     print("ADMINS IDs loaded:", ADMIN_ID)
@@ -41,12 +40,12 @@ async def connect_db():
 ASK_EMAIL, ASK_CODE = range(2)
 #async def connect_db():
 #    global db_conn
-#    db_conn = await asyncpg.connect(DATABASE_URL)
+#    db_conn = await asyncpg.connect(DATABASE_URL)   
 def send_verification_email(to_email,code):
     msg = MIMEText(f"""\
     Hello,
-    Thank for registering with the ENP Course Assistant Bot.
-    Yourverification code is: {code}"
+    Thank you for registering with the ENP Course Assistant Bot.
+    Your verification code is: {code}"
 
     It's valid for 10 minutes. if you did not request this, you can simply ignore the email.
     This is an automated email. Please don't reply.
@@ -54,7 +53,6 @@ def send_verification_email(to_email,code):
 
 
     Best regards,
-    ENP bot developer
     """)
     msg['Subject'] = "ENP  Bot Verification Code"
     msg['From'] = GMAIL_USER
@@ -67,7 +65,6 @@ def send_verification_email(to_email,code):
     except Exception as e:
         print(f"Failed to send email: {e}")
 #HELPER FUNCTIONS for database
-
 async def save_material(module, category, file_name, file_id):
     conn = await connect_db()
     await conn.execute("""
@@ -75,13 +72,11 @@ async def save_material(module, category, file_name, file_id):
         VALUES ($1, $2, $3, $4)
     """, module, category, file_name, file_id)
     await conn.close()
-
 async def get_all_materials():
     conn = await connect_db()
     rows = await conn.fetch("SELECT * FROM materials")
     await conn.close()
     return rows
-
 async def delete_material_by_filename(file_name):
     conn = await connect_db()
     result = await conn.execute("""
@@ -89,7 +84,6 @@ async def delete_material_by_filename(file_name):
     """, file_name.strip())
     await conn.close()
     return result
-
 async def find_material_by_filename(file_name):
     conn = await connect_db()
     row = await conn.fetchrow("""
@@ -116,7 +110,7 @@ def registered_only(func):
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     db_conn = await connect_db()
-    await update.message.reply_text( """👋 WELCOME, future Hunter of Knowledge!
+    await update.message.reply_text( """👋 WELCOME, future Hunter !
 ⚙️ Type /help to explore tools  
 📝 Don’t forget to /register before using commands.""")
 # for upload command always use async 
@@ -131,11 +125,9 @@ async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await update.message.reply_text(" You need to register first using /register")
     if len(context.args) != 2:
         return await update.message.reply_text("Wrong sytanx :( , usage: /upload <module> <category> ")
-
     module,category = context.args
     upload_state[update.effective_user.id] = (module,category)
-    await update.message.reply_text(f"Upload target set to :  {module} > {category}\nNow send me the file!")
-    
+    await update.message.reply_text(f"Upload target set to :  {module} > {category}\nNow send me the file!")    
 # for get file command again we use async
 @registered_only
 async def get_files(update: Update, context:ContextTypes.DEFAULT_TYPE):
@@ -223,7 +215,6 @@ async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
             responses.append(f"Deleted `{file_name}`")
         else:
             responses.append(f"Not found `{file_name}`")
-
     await update.message.reply_text("\n".join(responses), parse_mode="Markdown")
 @registered_only       
 async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
@@ -238,13 +229,10 @@ async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
     matched = [row for row in rows if keyword in row['file_name']] 
     if not matched:
         await update.message.reply_text(f"No files found for `{keyword}`")
-        
     response = f"*Found {len(matched)} file(s):*\n\n"
     for row in matched:
         response += f"📁{row['module']} --> 📘{row['category']} -->📄{row['category']} --> {row['file_name']}\n"
-
     await update.message.reply_text(response, parse_mode="Markdown")    
-
 async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):           
     user_id = update.effective_user.id
     db_conn = await connect_db()
@@ -256,9 +244,7 @@ async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
         \\-Contact me via email \:  ala\_eddine\\.fadeli@g\\.enp\\.edu\\.dz"
         \\-report an issue \: enpcourse\\.bot@gmail\\.com"
         \\-project launch date \: 2025\\-07\\-19" """
-
     await update.message.reply_text(crrds, parse_mode='MarkdownV2')
-
 @registered_only       
 async def admin_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id    
@@ -289,8 +275,6 @@ async def done_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Upload session ended.")
     else:
         await update.message.reply_text("No active upload  session")
-
-
 async def receive_email(update:Update, context: ContextTypes.DEFAULT_TYPE):
     email = update.message.text.strip().lower()
     if not re.fullmatch(r"[a-z0-9._%+-]+@g\.enp\.edu\.dz", email):
@@ -327,7 +311,6 @@ async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Wrong code. Please try again")
 
         return ASK_CODE
-
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please enter your email adress")
     return ASK_EMAIL
@@ -337,7 +320,15 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
                                     ASK_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_code)],
                                 },
                                 fallbacks = [],
-)    
+)
+#async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#    command = [] 
+#
+#    await update.message.reply_text(f"Most used command : {command}")
+
+
+
+
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
