@@ -352,6 +352,7 @@ def run_bot_thread():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
+threading.Thread(target=run_bot_thread).start()    
 @app.route("/")
 def home():
     return "bot is running"
