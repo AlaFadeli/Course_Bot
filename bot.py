@@ -18,7 +18,7 @@ import sys
 import random 
 import re
 from functools import wraps
-app = Flask(__name__)
+flask_app= Flask(__name__)
 @flask_app.route("/")
 def home():
     return "Bot is running"
