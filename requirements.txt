@@ -3,3 +3,5 @@ dotenv
 asyncpg
 asyncio
 flask
+apscheduler
+logging
