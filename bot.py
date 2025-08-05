@@ -1,4 +1,5 @@
 import json 
+from flask import Flask
 import asyncio
 import shlex
 import asyncpg
@@ -41,6 +42,7 @@ ASK_EMAIL, ASK_CODE = range(2)
 #async def connect_db():
 #    global db_conn
 #    db_conn = await asyncpg.connect(DATABASE_URL)   
+app = Flask(__name__)
 def send_verification_email(to_email,code):
     msg = MIMEText(f"""\
     Hello,
@@ -327,8 +329,15 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
 #    await update.message.reply_text(f"Most used command : {command}")
 
 
-
-
+app = Flask(__name__)
+@app.route("/")
+def home():
+    return "bot is running"
+def start_bot():
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_bot())
+port = int(os.environ.get("PORT", 10000))
+app.run(host="0.0.0.0", port=port)
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -347,5 +356,13 @@ def main():
     app.add_handler(conv_handler)
     print('Bot is running...')
     app.run_polling()
+@app.before_first_request
+def start_bot():
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_bot())
+@app.route("/")
+def home():
+    return "bot is running"
 if __name__ == "__main__":
-    main()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
