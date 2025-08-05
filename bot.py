@@ -291,8 +291,30 @@ def registered_only(func):
             await update.messagee.reply_text("You are not registered. Use /register first.")
             return
         return await func(update, context, *args, **kwargs)
-    return wrapper        
+    return wrapper    
+async def get_users_to_remind():
+    conn = await connect_db()
+    users = await conn.fetch("SELECT user_id, username FROM verified_users WHERE reminder_due = TRUE")
+    await conn.close()
+    return users
+async def send_reminders(bot: Bot):
+    users = await get_users_to_remind()
+    for user in users:
+        try:
+            await bot.send_message(
+                chat_id=user["user_id"],
+                text=f"Hi {user['username']}, this is your reminder, DID YOU QUITE STUDYING ????!!!!"
+            )
+            logging.info(f"Sent reminder to {user['username']}")
+        except Exception as e:
+            logging.error(f"Failed to send reminder to {user['user_id']}:{e}")
+ 
+async def start_scheduler(app: Application):
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(send_reminders, "interval", days=2, args=[app.bot])
+    scheduler.start()
 #initial start command
+
 async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     db_conn = await connect_db()
@@ -529,6 +551,7 @@ def main():
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
+    application.post_init = start_scheduler
     print('Bot is running...')
     app.run_polling()
 import threading
