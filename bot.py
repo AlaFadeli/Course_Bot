@@ -553,7 +553,7 @@ def main():
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
-    application.post_init = start_scheduler
+    app.post_init = start_scheduler
     print('Bot is running...')
     app.run_polling()
 import threading
