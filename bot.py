@@ -21,7 +21,132 @@ from functools import wraps
 flask_app= Flask(__name__)
 @flask_app.route("/")
 def home():
-    return "Bot is running"
+    return """<html>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ENP Course Material Bot</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7f9fb;
+            color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h1 {
+            color: #0077cc;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        .commands {
+            text-align: left;
+            margin-top: 2rem;
+        }
+
+        .commands h2 {
+            color: #444;
+            margin-bottom: 1rem;
+        }
+
+        .command-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .command-list li {
+            margin: 0.8rem 0;
+            padding: 1rem;
+            background: #f0f4f8;
+            border-left: 4px solid #0077cc;
+            border-radius: 6px;
+        }
+
+        .command-list code {
+            font-weight: bold;
+            color: #0077cc;
+            background: #e8f2ff;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 2rem;
+            background: #0077cc;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .button:hover {
+            background: #005fa3;
+        }
+
+        .credits {
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 ENP Course Material Bot</h1>
+        <p class="tagline">Your personal assistant to access, upload, and manage ENP study files directly on Telegram.</p>
+
+        <a class="button" href="https://t.me/YOUR_BOT_USERNAME" target="_blank">🚀 Open Bot on Telegram</a>
+
+        <div class="commands">
+            <h2>📖 Bot Commands</h2>
+            <ul class="command-list">
+                <li><code>/start</code> — Welcome message</li>
+                <li><code>/help</code> — Show this help menu</li>
+                <li><code>/upload &lt;module&gt; &lt;category&gt;</code> — Upload a file (admins only)</li>
+                <li><code>/done</code> — Reset upload state after you're done</li>
+                <li><code>/get &lt;module&gt; &lt;category&gt;</code> — Retrieve saved files</li>
+                <li><code>/delete &lt;filename&gt;</code> — Delete file by name (admins only)</li>
+                <li><code>/search &lt;keyword&gt;</code> — Search for matching keywords</li>
+                <li><code>/credits</code> — Project owner + contact</li>
+            </ul>
+        </div>
+
+        <div class="credits">
+            Made with ❤️ by the ENP Bot Team — Powered by Python & Telegram
+        </div>
+    </div>
+</body>
+</html>
+    <html>"""
 def run_flask():
     port =int(os.environ.get("PORT", 10000))
     flask_app.run(host="0.0.0.0", port=port)
