@@ -339,7 +339,7 @@ def start_bot():
 port = int(os.environ.get("PORT", 10000))
 app.run(host="0.0.0.0", port=port)
 # finaly main func
-def main():
+async def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
     app.add_handler(CommandHandler('start',start))
@@ -355,7 +355,7 @@ def main():
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
     print('Bot is running...')
-    app.run_polling()
+    await app.run_polling()
 @app.before_first_request
 def start_bot():
     loop = asyncio.get_event_loop()
