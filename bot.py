@@ -21,41 +21,54 @@ from functools import wraps
 flask_app= Flask(__name__)
 @flask_app.route("/")
 def home():
-    return """<html>
-    <!DOCTYPE html>
+    return """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>ENP Course Material Bot</title>
     <style>
+        :root {
+            --main-bg: #ffffff;
+            --text-color: #222;
+            --card-bg: #f0f4f8;
+            --accent: #005dce;
+        }
+
+        [data-theme="dark"] {
+            --main-bg: #121212;
+            --text-color: #ddd;
+            --card-bg: #1f1f1f;
+            --accent: #3399ff;
+        }
+
         body {
             margin: 0;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #f7f9fb;
-            color: #222;
+            background: var(--main-bg);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 2rem;
+            transition: background 0.3s, color 0.3s;
         }
 
         .container {
             max-width: 800px;
-            background: white;
+            background: var(--main-bg);
             padding: 2rem;
             border-radius: 1rem;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
             text-align: center;
         }
 
         h1 {
-            color: #0077cc;
+            color: var(--accent);
         }
 
         .tagline {
             font-size: 1.1rem;
-            color: #555;
             margin-bottom: 1.5rem;
         }
 
@@ -65,7 +78,6 @@ def home():
         }
 
         .commands h2 {
-            color: #444;
             margin-bottom: 1rem;
         }
 
@@ -77,15 +89,15 @@ def home():
         .command-list li {
             margin: 0.8rem 0;
             padding: 1rem;
-            background: #f0f4f8;
-            border-left: 4px solid #0077cc;
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent);
             border-radius: 6px;
         }
 
         .command-list code {
             font-weight: bold;
-            color: #0077cc;
-            background: #e8f2ff;
+            color: var(--accent);
+            background: rgba(0, 93, 206, 0.1);
             padding: 0.1rem 0.4rem;
             border-radius: 4px;
         }
@@ -93,7 +105,7 @@ def home():
         .button {
             display: inline-block;
             margin-top: 2rem;
-            background: #0077cc;
+            background: var(--accent);
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
@@ -103,13 +115,35 @@ def home():
         }
 
         .button:hover {
-            background: #005fa3;
+            background: #004bb5;
         }
 
         .credits {
             margin-top: 3rem;
             font-size: 0.9rem;
             color: #888;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--accent);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            background: var(--card-bg);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
         }
 
         @media (max-width: 600px) {
@@ -120,18 +154,19 @@ def home():
     </style>
 </head>
 <body>
+    <div class="theme-toggle" onclick="toggleTheme()">🌙 Toggle Theme</div>
     <div class="container">
         <h1>📚 ENP Course Material Bot</h1>
-        <p class="tagline">Your personal assistant to access, upload, and manage ENP study files directly on Telegram.</p>
+        <p class="tagline">Your assistant to access, upload, and manage ENP study files directly on Telegram.</p>
 
-        <a class="button" href="https://t.me/YOUR_BOT_USERNAME" target="_blank">🚀 Open Bot on Telegram</a>
+        <a class="button" href="https://t.me/ENPcoursebot" target="_blank">🚀 Open @ENPcoursebot on Telegram</a>
 
         <div class="commands">
             <h2>📖 Bot Commands</h2>
             <ul class="command-list">
                 <li><code>/start</code> — Welcome message</li>
-                <li><code>/help</code> — Show this help menu</li>
-                <li><code>/upload &lt;module&gt; &lt;category&gt;</code> — Upload a file (admins only)</li>
+                <li><code>/help</code> — Show help menu</li>
+<li><code>/upload &lt;module&gt; &lt;category&gt;</code> — Upload a file (admins only)</li>
                 <li><code>/done</code> — Reset upload state after you're done</li>
                 <li><code>/get &lt;module&gt; &lt;category&gt;</code> — Retrieve saved files</li>
                 <li><code>/delete &lt;filename&gt;</code> — Delete file by name (admins only)</li>
@@ -141,12 +176,29 @@ def home():
         </div>
 
         <div class="credits">
-            Made with ❤️ by the ENP Bot Team — Powered by Python & Telegram
+            Made with ❤️ by <strong>Ala Fadeli</strong> <br />
+            Contact: <a href="mailto:enpcoursebot@gmail.com">enpcoursebot@gmail.com</a>
+            <div class="footer-links">
+                <a href="https://github.com/AlaFadeli" target="_blank">GitHub</a>
+                • <a href="https://t.me/ENPcoursebot" target="_blank">Telegram Bot</a>
+            </div>
         </div>
     </div>
+
+    <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute("data-theme");
+            const next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("theme", next);
+        }
+
+        // Load saved theme
+        const saved = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", saved);
+    </script>
 </body>
-</html>
-    <html>"""
+</html>"""
 def run_flask():
     port =int(os.environ.get("PORT", 10000))
     flask_app.run(host="0.0.0.0", port=port)
