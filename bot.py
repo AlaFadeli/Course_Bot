@@ -337,7 +337,7 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
 
 
 # finaly main func
- def main():
+def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
     app.add_handler(CommandHandler('start',start))
