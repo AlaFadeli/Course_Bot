@@ -29,7 +29,8 @@ def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
 API_TOKEN= os.getenv("API_TOKEN")
-
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 ADMIN1= os.getenv("ADMIN1")
 ADMIN2= os.getenv("ADMIN2")
 ADMIN3= os.getenv("ADMIN3")
