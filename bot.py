@@ -329,15 +329,6 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
 #    await update.message.reply_text(f"Most used command : {command}")
 
 
-app = Flask(__name__)
-@app.route("/")
-def home():
-    return "bot is running"
-def start_bot():
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_bot())
-port = int(os.environ.get("PORT", 10000))
-app.run(host="0.0.0.0", port=port)
 # finaly main func
 async def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -356,6 +347,7 @@ async def main():
     app.add_handler(conv_handler)
     print('Bot is running...')
     await app.run_polling()
+import threading
 @app.before_first_request
 def start_bot():
     loop = asyncio.get_event_loop()
