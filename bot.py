@@ -174,11 +174,12 @@ def home():
                 <li><code>/delete &lt;filename&gt;</code> — Delete file by name (admins only)</li>
                 <li><code>/search &lt;keyword&gt;</code> — Search for matching keywords</li>
                 <li><code>/credits</code> — Project owner + contact</li>
+                <li><code>/register</code> — Regester usig enp email</li>
             </ul>
         </div>
 
         <div class="credits">
-            Made by <strong>Ala Fadeli</strong> <br />
+            Made by <strong>Fadeli Ala Eddine</strong> <br />
             Contact: <a href="mailto:enpcoursebot@gmail.com">enpcoursebot@gmail.com</a>
             <div class="footer-links">
                 <a href="https://github.com/AlaFadeli" target="_blank">GitHub</a>
