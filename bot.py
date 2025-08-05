@@ -348,10 +348,10 @@ async def main():
     print('Bot is running...')
     await app.run_polling()
 import threading
-@app.before_first_request
-def start_bot():
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
+def run_bot_thread():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
 @app.route("/")
 def home():
     return "bot is running"
