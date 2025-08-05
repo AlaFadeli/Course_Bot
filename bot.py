@@ -18,6 +18,13 @@ import sys
 import random 
 import re
 from functools import wraps
+app = Flask(__name__)
+@flask_app.route("/")
+def home():
+    return "Bot is running"
+def run_flask():
+    port =int(os.environ.get("PORT", 10000))
+    flask_app.run(host="0.0.0.0", port=port)
 def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
@@ -42,7 +49,7 @@ ASK_EMAIL, ASK_CODE = range(2)
 #async def connect_db():
 #    global db_conn
 #    db_conn = await asyncpg.connect(DATABASE_URL)   
-app = Flask(__name__)
+
 def send_verification_email(to_email,code):
     msg = MIMEText(f"""\
     Hello,
@@ -330,7 +337,7 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
 
 
 # finaly main func
-async def main():
+ def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
     app.add_handler(CommandHandler('start',start))
@@ -346,16 +353,8 @@ async def main():
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
     print('Bot is running...')
-    await app.run_polling()
+    app.run_polling()
 import threading
-def run_bot_thread():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
-threading.Thread(target=run_bot_thread).start()    
-@app.route("/")
-def home():
-    return "bot is running"
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    threading.Thread(target=run_flask, daemon=True).start()
+    main()
