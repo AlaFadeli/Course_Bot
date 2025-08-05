@@ -176,7 +176,7 @@ def home():
         </div>
 
         <div class="credits">
-            Made with ❤️ by <strong>Ala Fadeli</strong> <br />
+            Made by <strong>Ala Fadeli</strong> <br />
             Contact: <a href="mailto:enpcoursebot@gmail.com">enpcoursebot@gmail.com</a>
             <div class="footer-links">
                 <a href="https://github.com/AlaFadeli" target="_blank">GitHub</a>
