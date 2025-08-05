@@ -4,11 +4,12 @@ import asyncio
 import shlex
 import asyncpg
 import os
-from telegram import Update, Document
+from telegram import Update, Document, Bot
+import logging
 from telegram.ext import (
     ApplicationBuilder, CommandHandler,
     MessageHandler,ConversationHandler,
-    ContextTypes, filters
+    ContextTypes, filters, Application
 )
 #from secretspy import GMAIL_USER, GMAIL_APP_PASSWORD
 import smtplib
@@ -18,6 +19,7 @@ import sys
 import random 
 import re
 from functools import wraps
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 flask_app= Flask(__name__)
 @flask_app.route("/")
 def home():
@@ -303,7 +305,7 @@ async def send_reminders(bot: Bot):
         try:
             await bot.send_message(
                 chat_id=user["user_id"],
-                text=f"Hi {user['username']}, this is your reminder, DID YOU QUITE STUDYING ????!!!!"
+                text=f"Hi {user['username']}, this is your reminder, DID YOU QUIT STUDYING ????!!!!"
             )
             logging.info(f"Sent reminder to {user['username']}")
         except Exception as e:
