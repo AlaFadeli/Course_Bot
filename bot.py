@@ -359,7 +359,7 @@ def main():
 @app.before_first_request
 def start_bot():
     loop = asyncio.get_event_loop()
-    loop.create_task(run_bot())
+    loop.create_task(main())
 @app.route("/")
 def home():
     return "bot is running"
