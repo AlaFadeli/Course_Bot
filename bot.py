@@ -29,13 +29,12 @@ def load_token_file(path="token.txt"):
     with open(path,"r") as file:
         return file.read().strip()
 API_TOKEN= os.getenv("API_TOKEN")
-#def load_admins_file(path="admins.txt"):
-#    with open(path,"r") as file:
-#        return [int(line.strip()) for line in file if line.strip().isdigit()]
-#ADMIN_ID=load_admins_file()
-#if ADMIN_ID:
-#    print("ADMINS IDs loaded:", ADMIN_ID)
-#JSON_PATH = 'data/materiales.json'
+
+ADMIN1= os.getenv("ADMIN1")
+ADMIN2= os.getenv("ADMIN2")
+ADMIN3= os.getenv("ADMIN3")
+ADMIN4= os.getenv("ADMIN4")
+ADMIN_ID=[ADMIN1, ADMIN2, ADMIN3, ADMIN4]
 upload_state = {}
 #def get_base(path="databaseurl.txt"):
 #    with open(path,"r") as f:
