@@ -651,7 +651,7 @@ def main():
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
     app.post_init = start_scheduler
-    pool = await asyncpg.create_pool('DATABASE_URL')
+    pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai_handler))
     print('Bot is running...')
