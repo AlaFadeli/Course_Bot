@@ -5,3 +5,8 @@ asyncio
 flask
 apscheduler
 logging
+google-generativeai
+sentence-transformers
+faiss-cpu
+PyPDF2
+python-dotenv

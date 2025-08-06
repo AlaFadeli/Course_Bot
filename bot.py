@@ -1,4 +1,10 @@
 import json 
+import io
+import faiss
+import numpy as np
+import PyPDF2
+import google.generativeai as genai
+from sentence_transformers import SentenceTransformer
 from flask import Flask
 import asyncio
 import shlex
@@ -541,11 +547,92 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
                                 },
                                 fallbacks = [],
 )
-#async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    command = [] 
-#
-#    await update.message.reply_text(f"Most used command : {command}")
 
+# Use your Gemini API key from environment variables
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+# 1. Get file_id from your NeonDB (asyncpg connection pool is passed via bot_data)
+async def get_file_id_from_db(pool, file_name: str):
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT file_id FROM materials WHERE file_name = $1", file_name
+        )
+        return row["file_id"] if row else None
+
+# 2. Download file from Telegram via file_id (returns bytes)
+async def download_pdf_bytes(bot, file_id: str):
+    file = await bot.get_file(file_id)
+    return await file.download_as_bytearray()
+
+# 3. Extract text from PDF in memory and chunk it
+def extract_chunks_from_pdf_bytes(pdf_bytes, chunk_size=500):
+    reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+    text = "\n".join([page.extract_text() or "" for page in reader.pages])
+    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+
+# 4. Build embedding index with FAISS
+def build_index(chunks):
+    embeddings = embedder.encode(chunks)
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(np.array(embeddings))
+    return index, chunks
+
+# 5. Retrieve most relevant chunks for the question
+def get_context(query, index, chunks, k=3):
+    query_vec = embedder.encode([query])
+    D, I = index.search(np.array(query_vec), k)
+    return "\n---\n".join([chunks[i] for i in I[0]])
+
+# 6. Ask Google Gemini using the relevant context
+def ask_ai_with_gemini(context: str, question: str) -> str:
+    prompt = f"""
+You are an expert academic assistant helping a student understand their course material.
+
+Only use the information in the provided context to answer the question clearly and concisely.
+
+If the answer is not found in the context, respond with:
+"I couldn't find a clear answer in the provided material."
+
+--- BEGIN CONTEXT ---
+{context}
+--- END CONTEXT ---
+
+Question: {question}
+Answer:
+    """
+
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+    return response.text.strip()
+
+# 7. Telegram /askai handler function
+async def askai_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 2:
+        await update.message.reply_text("Usage: /askai <file_name> <your question>")
+        return
+
+    file_name = context.args[0]
+    question = " ".join(context.args[1:])
+    pool = context.bot_data.get("db_pool")
+
+    try:
+        # Lookup file_id
+        file_id = await get_file_id_from_db(pool, file_name)
+        if not file_id:
+            await update.message.reply_text("❌ File not found in the database.")
+            return
+
+        # Download PDF, process and answer
+        pdf_bytes = await download_pdf_bytes(context.bot, file_id)
+        chunks = extract_chunks_from_pdf_bytes(pdf_bytes)
+        index, chunks = build_index(chunks)
+        context_text = get_context(question, index, chunks)
+        answer = ask_ai_with_gemini(context_text, question)
+
+        await update.message.reply_text(answer)
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error: {e}")
 
 # finaly main func
 def main():
@@ -564,6 +651,9 @@ def main():
     app.add_handler(CommandHandler('done', done_command))
     app.add_handler(conv_handler)
     app.post_init = start_scheduler
+    pool = await asyncpg.create_pool('DATABASE_URL')
+    app.bot_data['db_pool'] = pool
+    app.add_handler(CommandHandler("askai", askai_handler))
     print('Bot is running...')
     app.run_polling()
 import threading
