@@ -327,7 +327,7 @@ async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
 @registered_only
 async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if update.effective_user.id not in (ADMIN1, ADMIN2, ADMIN3, ADMIN4):
+    if user_id != ADMIN1 and user_id != ADMIN2 and user_id !=  ADMIN3 and user_id != ADMIN4):
         return await update.message.reply_text('You are not authorized to upload, get a promotion or get used to it :)')
     db_conn = await connect_db()
     user_id = update.effective_user.id
