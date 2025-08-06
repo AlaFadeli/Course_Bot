@@ -49,7 +49,7 @@ def home():
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: var(--main-bg);
             background-image:
-        url('https://www.enp.edu.dz/ar/%D9%85%D8%B9%D8%B1%D8%B6-%D8%A7%D9%84%D8%B5%D9%88%D8%B1-%D9%88%D8%A7%D9%84%D9%81%D9%8A%D8%AF%D9%8A%D9%88%D9%87%D8%A7%D8%AA/');
+        url('https://www.alger-city.com/pics/education/universites/ecole-nationale-polytechnique/ecole-nationale-polytechnique-el-harrach-alger.jpg');
             background-size: cover;
             background-repeat: no-repeat;
             background-attachement: fixed;
