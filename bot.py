@@ -549,7 +549,7 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
 
 # Initialize Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # Connect to DB
 async def connect_db():
