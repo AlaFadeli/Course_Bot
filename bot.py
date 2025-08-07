@@ -10,6 +10,7 @@ import asyncpg
 import os
 from telegram import Update, Document, Bot
 import logging
+import shlex
 from telegram.ext import (
     ApplicationBuilder, CommandHandler,
     MessageHandler,ConversationHandler,
@@ -575,12 +576,13 @@ def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
 
 # /askai command handler
 async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) < 2:
-        await update.message.reply_text("Usage: /askai <filename.pdf> <your question>")
-        return
-
-    file_name = context.args[0]
-    user_question = " ".join(context.args[1:])
+    text = update.message.text or ""
+    args = shlex.split(text)
+    if len(args) < 3:
+        await update.message.reply_text("Usage: /askai \"File name.pdf \" Your question here ")
+        return 
+    file_name = args[1]
+    user_question = " ".join(args[2:])
 
     file_id = await get_file_id(file_name)
     if not file_id:
