@@ -631,7 +631,7 @@ Question:
 """
 
     try:
-        context.bot.seend_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
+        context.bot.send_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
         safe_response = escape_markdown_v2(response)
         await update.message.reply_text(safe_response.text.strip(), parse_mode="MarkdownV2")
