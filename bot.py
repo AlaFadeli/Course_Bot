@@ -1,10 +1,8 @@
 import json 
 import io
-import faiss
 import numpy as np
 import PyPDF2
 import google.generativeai as genai
-from sentence_transformers import SentenceTransformer
 from flask import Flask
 import asyncio
 import shlex
@@ -548,91 +546,71 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
                                 fallbacks = [],
 )
 
-# Use your Gemini API key from environment variables
+
+# Initialize Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
-# 1. Get file_id from your NeonDB (asyncpg connection pool is passed via bot_data)
-async def get_file_id_from_db(pool, file_name: str):
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            "SELECT file_id FROM materials WHERE file_name = $1", file_name
-        )
-        return row["file_id"] if row else None
+model = genai.GenerativeModel("gemini-pro")
 
-# 2. Download file from Telegram via file_id (returns bytes)
-async def download_pdf_bytes(bot, file_id: str):
-    file = await bot.get_file(file_id)
-    return await file.download_as_bytearray()
+# Connect to DB
+async def connect_db():
+    return await asyncpg.connect(os.getenv("DATABASE_URL"))
 
-# 3. Extract text from PDF in memory and chunk it
-def extract_chunks_from_pdf_bytes(pdf_bytes, chunk_size=500):
+# Get file_id from DB
+async def get_file_id(file_name):
+    conn = await connect_db()
+    row = await conn.fetchrow("SELECT file_id FROM materials WHERE file_name = $1", file_name)
+    await conn.close()
+    return row["file_id"] if row else None
+
+# Extract PDF text chunks
+def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
-    text = "\n".join([page.extract_text() or "" for page in reader.pages])
-    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+    full_text = ""
+    for page in reader.pages:
+        full_text += page.extract_text() or ""
+        if len(full_text) > max_chars:
+            break
+    chunks = [full_text[i:i+1000] for i in range(0, len(full_text), 1000)]
+    return chunks[:3]  # limit to 3 chunks max for prompt size
 
-# 4. Build embedding index with FAISS
-def build_index(chunks):
-    embeddings = embedder.encode(chunks)
-    index = faiss.IndexFlatL2(embeddings.shape[1])
-    index.add(np.array(embeddings))
-    return index, chunks
-
-# 5. Retrieve most relevant chunks for the question
-def get_context(query, index, chunks, k=3):
-    query_vec = embedder.encode([query])
-    D, I = index.search(np.array(query_vec), k)
-    return "\n---\n".join([chunks[i] for i in I[0]])
-
-# 6. Ask Google Gemini using the relevant context
-def ask_ai_with_gemini(context: str, question: str) -> str:
-    prompt = f"""
-You are an expert academic assistant helping a student understand their course material.
-
-Only use the information in the provided context to answer the question clearly and concisely.
-
-If the answer is not found in the context, respond with:
-"I couldn't find a clear answer in the provided material."
-
---- BEGIN CONTEXT ---
-{context}
---- END CONTEXT ---
-
-Question: {question}
-Answer:
-    """
-
-    model = genai.GenerativeModel("gemini-pro")
-    response = model.generate_content(prompt)
-    return response.text.strip()
-
-# 7. Telegram /askai handler function
-async def askai_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# /askai command handler
+async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 2:
-        await update.message.reply_text("Usage: /askai <file_name> <your question>")
+        await update.message.reply_text("Usage: /askai <filename.pdf> <your question>")
         return
 
     file_name = context.args[0]
-    question = " ".join(context.args[1:])
-    pool = context.bot_data.get("db_pool")
+    user_question = " ".join(context.args[1:])
+
+    file_id = await get_file_id(file_name)
+    if not file_id:
+        await update.message.reply_text("File not found in the database.")
+        return
+
+    # Download file from Telegram
+    file = await context.bot.get_file(file_id)
+    file_bytes = await file.download_as_bytearray()
+
+    # Extract chunks
+    chunks = extract_chunks_from_pdf(file_bytes)
+    context_text = "\n\n".join(chunks)
+
+    # Prepare prompt
+    prompt = f"""You are a  professional academic assistant that help engineering students understand course materials and solve exercises
+    Use the following content to answer the question.
+
+Content:
+{context_text}
+
+Question:
+{user_question}
+"""
 
     try:
-        # Lookup file_id
-        file_id = await get_file_id_from_db(pool, file_name)
-        if not file_id:
-            await update.message.reply_text("❌ File not found in the database.")
-            return
-
-        # Download PDF, process and answer
-        pdf_bytes = await download_pdf_bytes(context.bot, file_id)
-        chunks = extract_chunks_from_pdf_bytes(pdf_bytes)
-        index, chunks = build_index(chunks)
-        context_text = get_context(question, index, chunks)
-        answer = ask_ai_with_gemini(context_text, question)
-
-        await update.message.reply_text(answer)
-
+        response = model.generate_content(prompt)
+        await update.message.reply_text(response.text.strip())
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Error: {e}")
+        await update.message.reply_text("Error: " + str(e))
 
 # finaly main func
 def main():
@@ -653,7 +631,7 @@ def main():
     app.post_init = start_scheduler
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
-    app.add_handler(CommandHandler("askai", askai_handler))
+    app.add_handler(CommandHandler("askai", askai))
     print('Bot is running...')
     app.run_polling()
 import threading
