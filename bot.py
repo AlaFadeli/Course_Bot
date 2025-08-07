@@ -625,7 +625,9 @@ Question:
 """
 
     try:
+        context.bot.seend_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
+
         await update.message.reply_text(response.text.strip())
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
