@@ -625,7 +625,7 @@ Question:
 """
 
     try:
-        context.bot.reply_text("Thinking... Please wait as Gemini is thinking.")
+        await update.message.reply_text("Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
         await update.message.reply_text(response.text.strip())
     except Exception as e:
