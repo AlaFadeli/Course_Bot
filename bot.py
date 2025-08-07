@@ -634,7 +634,7 @@ Question:
         context.bot.send_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
         safe_response = escape_markdown_v2(response)
-        await update.message.reply_text(safe_response.text.strip(), parse_mode="MarkdownV2")
+        await update.message.reply_text(safe_response.text.strip())
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
 
