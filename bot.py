@@ -611,6 +611,8 @@ Question:
         await update.message.reply_text(response.text.strip())
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
+        for m in genai.list_models():
+            print(m.name, "--",m.supported_generation_methods)
 
 # finaly main func
 def main():
