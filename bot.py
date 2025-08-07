@@ -574,12 +574,6 @@ def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
     chunks = [full_text[i:i+1000] for i in range(0, len(full_text), 1000)]
     return chunks[:3]  # limit to 3 chunks max for prompt size
 # markdownv2 
-def escape_markdown_v2(text: str) -> str:
-    """
-    Escapes a string for Telegram MarkdownV2
-    """
-    escape_chars = r'\_*[]()~`>#-=|{}.!'
-    return re.sub(rf'([{re.escape(escape_chars)}])', r'\\\1', text)
 # /askai command handler
 async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text or ""
@@ -631,7 +625,7 @@ Question:
 """
 
     try:
-        context.bot.send_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
+        context.bot.reply_text("Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
         await update.message.reply_text(response.text.strip())
     except Exception as e:
