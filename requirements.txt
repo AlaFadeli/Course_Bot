@@ -8,3 +8,4 @@ logging
 google-generativeai
 PyPDF2
 python-dotenv
+numpy
