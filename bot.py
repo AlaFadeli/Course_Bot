@@ -573,7 +573,13 @@ def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
             break
     chunks = [full_text[i:i+1000] for i in range(0, len(full_text), 1000)]
     return chunks[:3]  # limit to 3 chunks max for prompt size
-
+# markdownv2 
+def escape_markdown_v2(text: str) -> str:
+    """
+    Escapes a string for Telegram MarkdownV2
+    """
+    escape_chars = r'\_*[]()~`>#-=|{}.!'
+    return re.sub(rf'([{re.escape(escape_chars)}])', r'\\\1', text)
 # /askai command handler
 async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text or ""
@@ -627,12 +633,10 @@ Question:
     try:
         context.bot.seend_message(chat_id=update.effective_chat.id, text= "Thinking... Please wait as Gemini is thinking.")
         response = model.generate_content(prompt)
-
-        await update.message.reply_text(response.text.strip())
+        safe_response = escape_markdown_v2(response)
+        await update.message.reply_text(safe_response.text.strip(), parse_mode="MarkdownV2")
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
-        for m in genai.list_models():
-            print(m.name, "--",m.supported_generation_methods)
 
 # finaly main func
 def main():
