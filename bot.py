@@ -608,7 +608,7 @@ async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
    – Respond in clear, concise, and formal academic English.  
    – Structure your answer with a brief introduction, key points (using numbered or bulleted lists when appropriate), and a concise summary.
 
-3. Visual Illustration (Optional)  
+3. Visual Illustration (Optional)  skip this for now 
    – If the concept can be made clearer by a diagram, chart, or photo, embed a relevant image using Markdown syntax:  
      ![Alt text](<image_url_or_placeholder>)  
    – If you don’t have an actual URL, use a placeholder like <diagram_of_[concept]> to indicate where an image would go.
@@ -617,13 +617,11 @@ async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
    – If the answer is not fully supported by the context, say:  
      *“I couldn’t find a definitive answer in the provided material.”*
 
----  
-CONTEXT (from PDF):  
-{context}
+Content:
+{context_text}
 
-QUESTION:  
-{question}
-
+Question:
+{user_question}
 """
 
     try:
