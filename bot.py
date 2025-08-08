@@ -640,7 +640,7 @@ async def get_users():
 async def send_messages(text):
     users = await get_users()
     for user in users:
-        text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
+        text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
         try:
             await applicatioon.bot.send_message(chat_id=user,
                                                 text=text)
