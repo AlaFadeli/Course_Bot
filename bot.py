@@ -637,12 +637,12 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-async def send_messages(text):
+async def send_messages(bot:Bot):
     users = await get_users()
     for user in users:
         text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
         try:
-            await applicatioon.bot.send_message(chat_id=user,
+            await bot.send_message(chat_id=user,
                                                 text=text)
         except Exceptioin as e:
             print(f"Failed to send to {user}: {e}")
