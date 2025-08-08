@@ -629,6 +629,18 @@ Question:
         await update.message.reply_text(response.text.strip())
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
+# event messages
+# get users to send message
+def get_users() 
+    conn = await connect_db()
+    users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
+    await conn.close()
+    return users
+async def send_messages(bot: Bot):
+    users = get_users()
+    for user in users:
+        await bot.send_message(chat_id= user,
+                               text= f"Hello enp warior! OUR bot now is AI-Powered, to learn more consider  giving my repo a visit or you can try it directly throught the bot by /askai (read help to first) ")
 
 # finaly main func
 def main():
