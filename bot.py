@@ -645,7 +645,6 @@ async def send_messages(text):
                                                 text=text)
         except Exceptioin as e:
             print(f"Failed to send to {user}: {e}")
-await send_messages("AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -666,6 +665,7 @@ def main():
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
+    await send_messages("AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
     print('Bot is running...')
     app.run_polling()
 import threading
