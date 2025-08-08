@@ -185,7 +185,8 @@ def home():
                 <li><code>/delete &lt;filename&gt;</code> — Delete file by name (admins only)</li>
                 <li><code>/search &lt;keyword&gt;</code> — Search for matching keywords</li>
                 <li><code>/credits</code> — Project owner + contact</li>
-                <li><code>/register</code> — Regester usig enp email</li>
+                <li><code>/register</code> — Register using enp email</li>
+                <li><code>/askai</code> — Ask the gemini-2-Pro model about any files in the database </li>
             </ul>
         </div>
 
@@ -641,7 +642,6 @@ async def send_messages(bot: Bot):
     for user in users:
         await bot.send_message(chat_id= user,
                                text= f"Hello enp warior! OUR bot now is AI-Powered, to learn more consider  giving my repo a visit or you can try it directly throught the bot by /askai (read help to first) ")
-await send_messages()
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
