@@ -631,7 +631,7 @@ Question:
         await update.message.reply_text("Error: " + str(e))
 # event messages
 # get users to send message
-def get_users() 
+def get_users(): 
     conn = await connect_db()
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
@@ -641,7 +641,7 @@ async def send_messages(bot: Bot):
     for user in users:
         await bot.send_message(chat_id= user,
                                text= f"Hello enp warior! OUR bot now is AI-Powered, to learn more consider  giving my repo a visit or you can try it directly throught the bot by /askai (read help to first) ")
-
+await send_messages()
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -662,6 +662,7 @@ def main():
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
+    app.add_handler(MessageHandler())
     print('Bot is running...')
     app.run_polling()
 import threading
