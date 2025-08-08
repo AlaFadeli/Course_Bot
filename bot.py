@@ -643,7 +643,7 @@ async def send_messages(text):
         try:
             await applicatioon.bot.send_message(chat_id=user,
                                                 text=text)
-            except Exceptioin as e:
+        except Exceptioin as e:
             print(f"Failed to send to {user}: {e}")
 await send_messages("AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
 # finaly main func
