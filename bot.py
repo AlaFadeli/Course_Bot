@@ -637,11 +637,11 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-async def send_messages(bot:Bot):
+async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE:
     users = await get_users()
     for user in users:
         text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
-        await bot.send_message(chat_id=user,
+        await context.bot.send_message(chat_id=user,
                                 text=text)
 # finaly main func
 def main():
