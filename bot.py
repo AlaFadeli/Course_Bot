@@ -637,11 +637,15 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-async def send_messages(bot: Bot):
+async def send_messages(text):
     users = await get_users()
     for user in users:
-        await bot.send_message(chat_id= user,
-                               text= f"Hello enp warior! OUR bot now is AI-Powered, to learn more consider  giving my repo a visit or you can try it directly throught the bot by /askai (read help to first) ")
+        try:
+            await applicatioon.bot.send_message(chat_id=user
+                                                text=text)
+            except Exceptioin as e:
+            print(f"Failed to send to {user}: {e}")
+await send_messages("AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -662,7 +666,6 @@ def main():
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
-    app.add_handler(MessageHandler())
     print('Bot is running...')
     app.run_polling()
 import threading
