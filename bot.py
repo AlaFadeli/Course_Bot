@@ -640,6 +640,7 @@ async def get_users():
 async def send_messages(text):
     users = await get_users()
     for user in users:
+        text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
         try:
             await applicatioon.bot.send_message(chat_id=user,
                                                 text=text)
@@ -665,7 +666,7 @@ def main():
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
-    await send_messages("AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!")                
+    app.add_handler(CommandHandler("send", send_messages))
     print('Bot is running...')
     app.run_polling()
 import threading
