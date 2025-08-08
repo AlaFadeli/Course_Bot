@@ -618,7 +618,8 @@ async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 4. Honesty & Limitations  
    – If the answer is not fully supported by the context, say:  
      *“I couldn’t find a definitive answer in the provided material.”*
-note: Add emojis for interactive and fun response, use a fun yet Professional tone
+notes: Add emojis for interactive and fun response, use a fun yet Professional tone
+        Some pdfs that maybe provided will contain images , considering that , make a note at the end of the message if the provided content is an image. though try to analyze it and give the best out of it.
 Content:
 {context_text}
 
