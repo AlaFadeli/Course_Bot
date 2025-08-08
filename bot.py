@@ -338,6 +338,7 @@ async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     db_conn = await connect_db()
     await update.message.reply_text( """👋 WELCOME, future Hunter !
+This is version 1.0.0 of ENP Course Assistant Bot!    
 ⚙️ Type /help to explore tools  
 📝 Don’t forget to /register before using commands.""")
 @registered_only
@@ -637,7 +638,7 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE:
+async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
     users = await get_users()
     for user in users:
         text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
