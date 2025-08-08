@@ -577,6 +577,7 @@ def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
     return chunks[:3]  # limit to 3 chunks max for prompt size
 # markdownv2 
 # /askai command handler
+@registered_only
 async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text or ""
     args = shlex.split(text)
