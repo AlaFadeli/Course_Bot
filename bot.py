@@ -641,7 +641,7 @@ async def send_messages(text):
     users = await get_users()
     for user in users:
         try:
-            await applicatioon.bot.send_message(chat_id=user
+            await applicatioon.bot.send_message(chat_id=user,
                                                 text=text)
             except Exceptioin as e:
             print(f"Failed to send to {user}: {e}")
