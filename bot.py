@@ -620,8 +620,7 @@ async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
    – If the answer is not fully supported by the context, say:  
      *“I couldn’t find a definitive answer in the provided material.”*
 notes: Add emojis for interactive and fun response, use a fun yet Professional tone
-        - Structure your answer message in MarkdownV2 compatible with telegram bot messages.
-
+        
 Content:
 {context_text}
 
