@@ -669,6 +669,34 @@ async def anonymous_question(update:Update, context:ContextTypes.DEFAULT_TYPE):
                                    text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
     await update.message.reply_text("Your question has been posted anonymously.")
 
+@registered_only
+async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    if not update.message.reply_to_message:
+        return
+    original_text = update.message.reply_to_message.text
+    if not original_text.startswith("? "):
+        return 
+    question_id = original_text.split("\n", 1)[0].replace("? ", "").replace(":", "").strip()
+    answer_text = update.message.text
+
+    conn = await connect_db()
+    await conn.execute(
+        "INSERT INTO answers (question_id, answer_text, answerer_id) VALUES ($1, $2, $3)",
+        question_id, answer_text,
+        update.effective_user.id
+    )
+    asker_id = await conn.fetchval("SELECT  asker_id FROM questions WHERE question_id = $1",question_id)
+    await conn.close()
+    if asker_id:
+        try:
+            await context.bot.send_message(
+                chat_id=asker_id,
+                text=f" NEW answer to your question {question_id}:\n{answer_text}"
+            )
+        except:
+            pass
+
+
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
@@ -685,13 +713,13 @@ def main():
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', anonymous_question))
     app.add_handler(CommandHandler('ask', _command))
+    app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_reply))
     app.add_handler(conv_handler)
     app.post_init = start_scheduler
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
-    app.add_handler(MessageHandler(filters.ALL, show_chat_id))
     print('Bot is running...')
     app.run_polling()
 import threading
