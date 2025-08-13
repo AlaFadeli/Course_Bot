@@ -711,7 +711,7 @@ def main():
     app.add_handler(CommandHandler('credits',credits_command))
     app.add_handler(CommandHandler('admin', admin_command))
     app.add_handler(CommandHandler('list', list_command))
-    app.add_handler(CommandHandler('done', anonymous_question))
+    app.add_handler(CommandHandler('done', done_command))
     app.add_handler(CommandHandler('ask', anonymous_question))
     app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_reply))
     app.add_handler(conv_handler)
