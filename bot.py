@@ -646,31 +646,28 @@ async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
         text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
         await context.bot.send_message(chat_id=user,
                                 text=text)
-#@registered_only
-#async def anonymous_question(update:Update, context:ContextTypes.DEFAULT_TYPE):
-#    if update.effective_chat.type != "private":
-#        await update.message.reply_text("Please send your question in a private chat with me.")
-#        return
-#    if not context.args:
-#        await update.message.reply_text("Usage: /ask <your question>")
-#        return
-#    question_text="".join(context.args)
-#    question_id = f"Q{random.randint(100,999)}"
-#
-#    conn = await connect_db()
-#    await conn.execute(
-#       "INSERT INTO questions (question_id, question_text, asker_id) VALUES ($1, $2, $3)",
-#        question_id, question_text, update.effective_user.id
-#    )
-#    await conn.close()
-#
-#    await context.bot.send_message(chat_id=GROUP_ID,
-#                                   text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
-#    await update.message.reply_text("Your question has been posted anonymously.")
+GROUP_ID=4832691347        
+@registered_only
+async def anonymous_question(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type != "private":
+        await update.message.reply_text("Please send your question in a private chat with me.")
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /ask <your question>")
+        return
+    question_text="".join(context.args)
+    question_id = f"Q{random.randint(100,999)}"
 
-async def show_chat_id(update, context):
-    chat = update.effective_chat
-    await update.message.reply_text(f"Chat ID: {chat.id}")
+    conn = await connect_db()
+    await conn.execute(
+       "INSERT INTO questions (question_id, question_text, asker_id) VALUES ($1, $2, $3)",
+        question_id, question_text, update.effective_user.id
+    )
+    await conn.close()
+
+    await context.bot.send_message(chat_id=GROUP_ID,
+                                   text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
+    await update.message.reply_text("Your question has been posted anonymously.")
 
 # finaly main func
 def main():
@@ -686,7 +683,8 @@ def main():
     app.add_handler(CommandHandler('credits',credits_command))
     app.add_handler(CommandHandler('admin', admin_command))
     app.add_handler(CommandHandler('list', list_command))
-    app.add_handler(CommandHandler('done', done_command))
+    app.add_handler(CommandHandler('done', anonymous_question))
+    app.add_handler(CommandHandler('ask', _command))
     app.add_handler(conv_handler)
     app.post_init = start_scheduler
     pool = asyncpg.create_pool('DATABASE_URL')
