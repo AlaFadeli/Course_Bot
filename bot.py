@@ -631,7 +631,7 @@ Question:
 
     try:
         response = model.generate_content(prompt)
-        await update.message.reply_text(response.text.strip())
+        await update.message.reply_text(response.text.strip(), parse_mode=MarkdownV2)
     except Exception as e:
         await update.message.reply_text("Error: " + str(e))
 # event messages
