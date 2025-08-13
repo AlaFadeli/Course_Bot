@@ -691,7 +691,7 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
         try:
             await context.bot.send_message(
                 chat_id=asker_id,
-                text=f" NEW answer to your question {question_id}:\n{answer_text}"
+                text=f"You recieved a NEW answer to your question {question_id}:\n{answer_text}"
             )
         except:
             pass
