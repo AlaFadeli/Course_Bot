@@ -695,7 +695,7 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
             )
         except:
             pass
-
+#fix
 
 # finaly main func
 def main():
