@@ -648,7 +648,7 @@ async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
                                 text=text)
 GROUP_ID=4832691347        
 @registered_only
-async def anonymous_question(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != "private":
         await update.message.reply_text("Please send your question in a private chat with me.")
         return
@@ -712,7 +712,7 @@ def main():
     app.add_handler(CommandHandler('admin', admin_command))
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
-    app.add_handler(CommandHandler('ask', anonymous_question))
+    app.add_handler(CommandHandler('ask', ask_command))
     app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_reply))
     app.add_handler(conv_handler)
     app.post_init = start_scheduler
