@@ -664,12 +664,12 @@ async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
         question_id, question_text, update.effective_user.id
     )
     await conn.close()
-
-    await context.bot.send_message(chat_id=GROUP_ID,
+    try:
+        await context.bot.send_message(chat_id=GROUP_ID,
                                    text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
-    await update.message.reply_text("Your question has been posted anonymously.")
-
-@registered_only
+        await update.message.reply_text("Your question has been posted anonymously.")
+    except:
+        pass
 async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -685,6 +685,7 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
         question_id, answer_text,
         update.effective_user.id
     )
+    
     asker_id = await conn.fetchval("SELECT  asker_id FROM questions WHERE question_id = $1",question_id)
     await conn.close()
     if asker_id:
