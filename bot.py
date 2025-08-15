@@ -715,6 +715,8 @@ def main():
     app.add_handler(CommandHandler('ask', ask_command))
     app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_answers))
     app.add_handler(conv_handler)
+    app.post_init = handle_group_answers
+    app.post_init = ask_command
     app.post_init = start_scheduler
     pool = asyncpg.create_pool('DATABASE_URL')
     app.bot_data['db_pool'] = pool
