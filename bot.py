@@ -646,7 +646,7 @@ async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
         text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
         await context.bot.send_message(chat_id=user,
                                 text=text)
-GROUP_ID=4832691347        
+GROUP_ID=-4832691347        
 @registered_only
 async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.type != "private":
