@@ -707,6 +707,94 @@ async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
             await msg.delete()
         except Exception as e:
             print("Failed to delete:", e)
+REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+def get_access_token():
+    url="https://accounts.spotify.com/api/token"
+    payload = {
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET
+    }
+    r = requests.post(url, data=payload)
+    r.raise_for_status()
+    return r.json()["access_token"]
+async def transcribe_audio(file_path: str) -> dict:
+    model = genai.GenerativeModel("gemini-2-Pro")
+    prompt = f"""
+    You are a command parser. Convert natural speech into structured JSON.
+    Example:
+    User says: "Play honor for all in spotify"
+    Output: {{"action": "play", "app":"spotify", "object": "Honor for all"}}
+    if unsure, still return JSON with best guess
+        """
+    with open(voic_path, "rb") as f:
+        audio_data = f.read()
+    transcript = model.generate_content([{"mime_type":"audio/ogg", "data":audio_data}])
+    text_command = transcript.text.strip()
+    structured = model.generate_content(f"""
+    Input: "{text_command}"
+    Respond ONLY with JSON in format {{"action": "....","app": "....", "object": "...."}}
+                                        """)
+    try: 
+        return json.loads(structured.text)
+    except:
+        return {"action": "unknown", "app":"none", "object":text_command}
+async def save_voice(user_id: in, file_path: str):
+    conn = await connect_db()
+    with open(file_path, "rb") as f:
+        data = f.read()
+        await conn.execute(
+            "INSERT INTO voice_messages( user_id, file_id, filename) VALUES ($1, $2, $3)",
+            user_id, file_id, file_name
+        )
+        await conn.close()
+async def get_latest_voice(user_id: int):
+    conn = await connect_db()
+    row = await conn.fetchrow(
+        "SELECT file_id, filename FROM voice_messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1",
+        user_id
+    )
+    await conn.close()
+    return row if row else None
+async def play_on_spotify(song, update):
+    token=get_access_token()
+    headers = {"Authorization": f"Bearer{token}"}
+
+    search_url = "https://api.spotify.com/v1/search"
+    params = {"q": song, "type":"track", "limit":1}
+    r = requests.get(search_url, headers=headers, params=params)
+    r.raise_for_status()
+    results =  r.json()
+
+    if results["tracks"]["items"]:
+        uri =results["tracks"]["items"][0]["uri"]
+        play_url="https://api.spotify.com/v1/me/player/play"
+        requests.put(play_url, headers=headers, json={"uris":[uri]})
+    else:
+        await update.message.reply_text("Song not found on spotify")
+
+async def handle_voice(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    file_id = update.message.voivce.file_id
+    file = await context.bot.get_file(file_id)
+    voice_path = "voice.ogg"
+    await file.download_to_drive(voice_path)
+    intent =transcribe_audio(voice_path)
+    action = intent.get("action")
+    app = intent.get("app")
+    obj = intent.get("object")
+
+    if app == "spotify" and action == "play":
+        sucess=play_on_spotify(obj)
+        if sucess:
+            await update.message.reply_text("playing {obj} on Spotify! ")
+        else:
+            await update.message.reply_text("this track was not found in spotify")
+
+
+
 
 # finaly main func
 def main():
