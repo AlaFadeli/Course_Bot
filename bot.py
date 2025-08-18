@@ -697,16 +697,19 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
         except:
             pass
 async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    bot_id = context.bot.id
-    msg = update.message
+    chat_id = update.effective_chat.id
+    if chat_id == -4832691347
+        
+        bot_id = context.bot.id
+        msg = update.message
 
-    if msg.reply_to_message and msg.reply_to_message_from_user.id == bot_id:
-        await msg.reply_text("Answer accepted , sent to asker ...")
-    else:
-        try:
-            await msg.delete()
-        except Exception as e:
-            print("Failed to delete:", e)
+        if msg.reply_to_message and msg.reply_to_message_from_user.id == bot_id:
+            await msg.reply_text("Answer accepted , sent to asker ...")
+        else:
+            try:
+                await msg.delete()
+            except Exception as e:
+                print("Failed to delete:", e)
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
