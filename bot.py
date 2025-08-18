@@ -698,7 +698,7 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
             pass
 async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    if chat_id == -4832691347
+    if chat_id == -4832691347:
         
         bot_id = context.bot.id
         msg = update.message
