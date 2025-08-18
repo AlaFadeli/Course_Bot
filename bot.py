@@ -696,7 +696,17 @@ async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE)
             )
         except:
             pass
-#fix
+async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    bot_id = context.bot.id
+    msg = update.message
+
+    if msg.reply_to_message and msg.reply_to_message_from_user.id == bot_id:
+        await msg.reply_text("Answer accepted , sent to asker ...")
+    else:
+        try:
+            await msg.delete()
+        except Exception as e:
+            print("Failed to delete:", e)
 
 # finaly main func
 def main():
@@ -723,6 +733,7 @@ def main():
     app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
     print('Bot is running...')
     app.run_polling()
 import threading
