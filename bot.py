@@ -742,7 +742,7 @@ async def transcribe_audio(file_path: str) -> dict:
         return json.loads(structured.text)
     except:
         return {"action": "unknown", "app":"none", "object":text_command}
-async def save_voice(user_id: in, file_path: str):
+async def save_voice(user_id: int, file_path: str):
     conn = await connect_db()
     with open(file_path, "rb") as f:
         data = f.read()
