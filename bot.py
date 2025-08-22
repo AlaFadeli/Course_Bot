@@ -713,7 +713,7 @@ async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-def get_access_token():
+async def get_access_token():
     url="https://accounts.spotify.com/api/token"
     payload = {
         "grant_type": "refresh_token",
@@ -762,6 +762,7 @@ async def get_latest_voice(user_id: int):
     )
     await conn.close()
     return row if row else None
+
 async def play_on_spotify(song, update):
     token=get_access_token()
     headers = {"Authorization": f"Bearer{token}"}
@@ -825,6 +826,7 @@ def main():
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
     app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print('Bot is running...')
     app.run_polling()
 import threading
