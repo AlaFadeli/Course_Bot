@@ -341,6 +341,7 @@ async def start(update:Update, context:ContextTypes.DEFAULT_TYPE):
 This is version 1.0.0 of ENP Course Assistant Bot!    
 ⚙️ Type /help to explore tools  
 📝 Don’t forget to /register before using commands.""")
+    await log_usage(update.effective_user.id, update.effective_user.username, "/start", udpate.effective_chat.id)
 @registered_only
 async def upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -421,6 +422,7 @@ async def help_command(update:Update, context = ContextTypes.DEFAULT_TYPE):
             note: After /upload ,send your file directly.
         """
     await update.message.reply_text(commands, parse_mode="Markdown")
+    await log_usage(update.effective_user.id, update.effective_user.username, "/help", udpate.effective_chat.id)
 @registered_only       
 async def delete_file(update:Update, context = ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -460,6 +462,7 @@ async def search_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
     for row in matched:
         response += f"📁{row['module']} --> 📘{row['category']} -->📄{row['category']} --> {row['file_name']}\n"
     await update.message.reply_text(response, parse_mode="Markdown")    
+    await log_usage(update.effective_user.id, update.effective_user.username, "search", udpate.effective_chat.id)
 async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):           
     user_id = update.effective_user.id
     db_conn = await connect_db()
@@ -472,6 +475,7 @@ async def credits_command(update:Update, context=ContextTypes.DEFAULT_TYPE):
         \\-report an issue \: enpcourse\\.bot@gmail\\.com"
         \\-project launch date \: 2025\\-07\\-19" """
     await update.message.reply_text(crrds, parse_mode='MarkdownV2')
+    await log_usage(update.effective_user.id, update.effective_user.username, "credits", udpate.effective_chat.id)
 @registered_only       
 async def admin_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id    
@@ -494,6 +498,7 @@ async def list_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
     matched = [row for row in rows if row ['module'] == module and row['category'] == category]
     for row in matched :
         await update.message.reply_text(f"--> {row['file_name']}\n")
+    await log_usage(update.effective_user.id, update.effective_user.username, "/list", udpate.effective_chat.id)
 @registered_only       
 async def done_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -547,6 +552,7 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
                                     ASK_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_code)],
                                 },
                                 fallbacks = [],
+    await log_usage(update.effective_user.id, update.effective_user.username, "register", udpate.effective_chat.id)
 )
 
 
@@ -579,6 +585,7 @@ def extract_chunks_from_pdf(pdf_bytes, max_chars=3000):
 # /askai command handler
 @registered_only
 async def askai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await log_usage(update.effective_user.id, update.effective_user.username, "/askai", udpate.effective_chat.id)
     text = update.message.text or ""
     args = shlex.split(text)
     if len(args) < 3:
@@ -649,6 +656,7 @@ async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
 GROUP_ID=-4832691347        
 @registered_only
 async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    await log_usage(update.effective_user.id, update.effective_user.username, "/ask", udpate.effective_chat.id)
     if update.effective_chat.type != "private":
         await update.message.reply_text("Please send your question in a private chat with me.")
         return
@@ -781,6 +789,7 @@ async def play_on_spotify(song, update):
         await update.message.reply_text("Song not found on spotify")
 
 async def handle_voice(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     file_id = update.message.voivce.file_id
     file = await context.bot.get_file(file_id)
     voice_path = "voice.ogg"
@@ -797,6 +806,13 @@ async def handle_voice(update:Update, context:ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("this track was not found in spotify")
 
+async def log_usage(user_id, username, command, chat_id):
+    conn = await asyncpg.connect(DATABASE_URL)
+    await conn.execute(
+        "INSERT INTO bot_usage (user_id,username,command,chat_id,used_at) VALUES ($1, $2, $3, $4, $5)",
+        user_id, username, command, chat_id, datetime.utcnow()
+    )
+    await conn.close()
 
 
 
