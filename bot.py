@@ -722,38 +722,6 @@ async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-async def get_access_token():
-    url="https://accounts.spotify.com/api/token"
-    payload = {
-        "grant_type": "refresh_token",
-        "refresh_token": REFRESH_TOKEN,
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET
-    }
-    r = requests.post(url, data=payload)
-    r.raise_for_status()
-    return r.json()["access_token"]
-async def transcribe_audio(file_path: str) -> dict:
-    model = genai.GenerativeModel("gemini-2-Pro")
-    prompt = f"""
-    You are a command parser. Convert natural speech into structured JSON.
-    Example:
-    User says: "Play honor for all in spotify"
-    Output: {{"action": "play", "app":"spotify", "object": "Honor for all"}}
-    if unsure, still return JSON with best guess
-        """
-    with open(voic_path, "rb") as f:
-        audio_data = f.read()
-    transcript = model.generate_content([{"mime_type":"audio/ogg", "data":audio_data}])
-    text_command = transcript.text.strip()
-    structured = model.generate_content(f"""
-    Input: "{text_command}"
-    Respond ONLY with JSON in format {{"action": "....","app": "....", "object": "...."}}
-                                        """)
-    try: 
-        return json.loads(structured.text)
-    except:
-        return {"action": "unknown", "app":"none", "object":text_command}
 async def save_voice(user_id: int, file_path: str):
     conn = await connect_db()
     with open(file_path, "rb") as f:
@@ -771,41 +739,71 @@ async def get_latest_voice(user_id: int):
     )
     await conn.close()
     return row if row else None
+# Spotipy client (using refresh token to always get valid access)
+sp_oauth = SpotifyOAuth(
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    redirect_uri="http://course-bot-m013.onrender.com",  # dummy; you already have token
+    scope="user-modify-playback-state user-read-playback-state"
+)
+spotify = Spotify(auth_manager=sp_oauth)
+# ====== GEMINI TRANSCRIPTION ======
+async def transcribe_with_gemini(audio_path: str) -> str:
+    with open(audio_path, "rb") as f:
+        audio_data = f.read()
 
-async def play_on_spotify(song, update):
-    token=get_access_token()
-    headers = {"Authorization": f"Bearer{token}"}
+    encoded_audio = base64.b64encode(audio_data).decode("utf-8")
 
-    search_url = "https://api.spotify.com/v1/search"
-    params = {"q": song, "type":"track", "limit":1}
-    r = requests.get(search_url, headers=headers, params=params)
-    r.raise_for_status()
-    results =  r.json()
+    body = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": "Transcribe the audio. If it's a song request, return only the song name/title."},
+                    {"inline_data": {"mime_type": "audio/ogg", "data": encoded_audio}}
+                ]
+            }
+        ]
+    }
 
-    if results["tracks"]["items"]:
-        uri =results["tracks"]["items"][0]["uri"]
-        play_url="https://api.spotify.com/v1/me/player/play"
-        requests.put(play_url, headers=headers, json={"uris":[uri]})
-    else:
-        await update.message.reply_text("Song not found on spotify")
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+            headers={"Authorization": f"Bearer {GEMINI_API_KEY}"},
+            json=body
+        ) as resp:
+            result = await resp.json()
+            return result["candidates"][0]["content"]["parts"][0]["text"]
 
+# ====== SPOTIFY PLAYBACK ======
+def play_song_on_spotify(song_query: str):
+    """Search song and play on active Spotify device"""
+    results = spotify.search(q=song_query, type="track", limit=1)
+    if not results['tracks']['items']:
+        return False
+    track_uri = results['tracks']['items'][0]['uri']
+    devices = spotify.devices()
+    if not devices['devices']:
+        return False
+    device_id = devices['devices'][0]['id']
+    spotify.start_playback(device_id=device_id, uris=[track_uri])
+    return True
 async def handle_voice(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    file_id = update.message.voivce.file_id
-    file = await context.bot.get_file(file_id)
-    voice_path = "voice.ogg"
-    await file.download_to_drive(voice_path)
-    intent =transcribe_audio(voice_path)
-    action = intent.get("action")
-    app = intent.get("app")
-    obj = intent.get("object")
+    voice = update.message.voice
+    file = await context.bot.get_file(voice.file_id)
 
-    if app == "spotify" and action == "play":
-        sucess=play_on_spotify(obj)
-        if sucess:
-            await update.message.reply_text("playing {obj} on Spotify! ")
-        else:
-            await update.message.reply_text("this track was not found in spotify")
+    file_path = f"/tmp/{voice.file_unique_id}.ogg"
+    await file.download_to_drive(file_path)
+    transcription = await transcribe_with_gemini(file_path)
+
+    save_voice(user_id, file_path)
+    match = re.search(r"(?:play|run)\s+(.+)", transcription, re.IGNORECASE)
+    if match :
+        song_name = match.group(1)
+        result = await play_song_on_spotify(song_name)
+        await update.message.reply_text(f"You said: {transcription}\n{result}")
+    else:
+        await update.message.reply_text(f"Transcribed : {transcription}")
 
 async def log_usage(user_id, username, command, chat_id):
     conn = await asyncpg.connect(DATABASE_URL)
