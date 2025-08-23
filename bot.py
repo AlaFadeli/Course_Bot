@@ -545,6 +545,7 @@ async def check_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ASK_CODE
 async def register_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please enter your email adress")
+    await log_usage(update.effective_user.id, update.effective_user.username, "register", udpate.effective_chat.id)
     return ASK_EMAIL
 conv_handler = ConversationHandler(entry_points= [CommandHandler("register", register_command)],
                                 states = {
@@ -552,8 +553,8 @@ conv_handler = ConversationHandler(entry_points= [CommandHandler("register", reg
                                     ASK_CODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_code)],
                                 },
                                 fallbacks = [],
-    await log_usage(update.effective_user.id, update.effective_user.username, "register", udpate.effective_chat.id)
 )
+
 
 
 # Initialize Gemini
