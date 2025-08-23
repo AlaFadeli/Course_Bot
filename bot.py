@@ -722,88 +722,7 @@ async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-async def save_voice(user_id: int, file_path: str):
-    conn = await connect_db()
-    with open(file_path, "rb") as f:
-        data = f.read()
-        await conn.execute(
-            "INSERT INTO voice_messages( user_id, file_id, filename) VALUES ($1, $2, $3)",
-            user_id, file_id, file_name
-        )
-        await conn.close()
-async def get_latest_voice(user_id: int):
-    conn = await connect_db()
-    row = await conn.fetchrow(
-        "SELECT file_id, filename FROM voice_messages WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1",
-        user_id
-    )
-    await conn.close()
-    return row if row else None
-# Spotipy client (using refresh token to always get valid access)
-sp_oauth = SpotifyOAuth(
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    redirect_uri="http://course-bot-m013.onrender.com",  # dummy; you already have token
-    scope="user-modify-playback-state user-read-playback-state"
-)
-spotify = Spotify(auth_manager=sp_oauth)
-# ====== GEMINI TRANSCRIPTION ======
-async def transcribe_with_gemini(audio_path: str) -> str:
-    with open(audio_path, "rb") as f:
-        audio_data = f.read()
 
-    encoded_audio = base64.b64encode(audio_data).decode("utf-8")
-
-    body = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": "Transcribe the audio. If it's a song request, return only the song name/title."},
-                    {"inline_data": {"mime_type": "audio/ogg", "data": encoded_audio}}
-                ]
-            }
-        ]
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-            headers={"Authorization": f"Bearer {GEMINI_API_KEY}"},
-            json=body
-        ) as resp:
-            result = await resp.json()
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-
-# ====== SPOTIFY PLAYBACK ======
-def play_song_on_spotify(song_query: str):
-    """Search song and play on active Spotify device"""
-    results = spotify.search(q=song_query, type="track", limit=1)
-    if not results['tracks']['items']:
-        return False
-    track_uri = results['tracks']['items'][0]['uri']
-    devices = spotify.devices()
-    if not devices['devices']:
-        return False
-    device_id = devices['devices'][0]['id']
-    spotify.start_playback(device_id=device_id, uris=[track_uri])
-    return True
-async def handle_voice(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    voice = update.message.voice
-    file = await context.bot.get_file(voice.file_id)
-
-    file_path = f"/tmp/{voice.file_unique_id}.ogg"
-    await file.download_to_drive(file_path)
-    transcription = await transcribe_with_gemini(file_path)
-
-    save_voice(user_id, file_path)
-    match = re.search(r"(?:play|run)\s+(.+)", transcription, re.IGNORECASE)
-    if match :
-        song_name = match.group(1)
-        result = await play_song_on_spotify(song_name)
-        await update.message.reply_text(f"You said: {transcription}\n{result}")
-    else:
-        await update.message.reply_text(f"Transcribed : {transcription}")
 
 async def log_usage(user_id, username, command, chat_id):
     conn = await asyncpg.connect(DATABASE_URL)
@@ -841,7 +760,6 @@ def main():
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
     app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
-    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     print('Bot is running...')
     app.run_polling()
 import threading
