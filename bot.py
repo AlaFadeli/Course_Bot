@@ -752,9 +752,9 @@ async def  summary(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
 
     conn = connect_db()
-    if period = "today":
+    if period == "today":
         query = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date=CURRENT_DATE GROUP BY category"
-    elif period = "week":
+    elif period == "week":
         query = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date >= CURRENT_DATE - INTERVAL '7 days' GROUP BY category"
     else:
         query  = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date >= date_trunc('month', CURRENT_DATE) GROUP BY category"
