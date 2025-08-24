@@ -743,7 +743,7 @@ async def add_expense(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await conn.execute(
         "INSERT INTO expenses (user_id, amount, category, description) VALUES ($1, $2, $3, $4)",
         user_id, amount, category, description)
-    )
+    
     await conn.close()
     await update.message.reply_text(f"Saved {amount} to {category}")
 
