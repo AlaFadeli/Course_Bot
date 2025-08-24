@@ -816,9 +816,9 @@ def main():
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
     app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
-    app.add_handler(CommandHandler('expense',add_expense ))
+    app.add_handler(CommandHandler('add_expense',add_expense))
     app.add_handler(CommandHandler('summary', summary))
-    app.add_handler(CommandHandler('chart',show_chart ))
+    app.add_handler(CommandHandler('show_chart',show_chart))
     print('Bot is running...')
     app.run_polling()
 import threading
