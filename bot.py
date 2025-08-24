@@ -731,10 +731,11 @@ async def log_usage(user_id, username, command, chat_id):
         user_id, username, command, chat_id, datetime.utcnow()
     )
     await conn.close()
-async def add_expense(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def add_expense(update:Update,context:ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) < 2:
         await update.meessage.reply_text("Usage: /expense <amount> <category> [description(optional)]")
+        return 
     amount = float(args[0])
     category = args[1]
     description = " ".join(args[2:]) if len(args) > 2 else ""
