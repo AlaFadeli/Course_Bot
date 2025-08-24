@@ -731,7 +731,63 @@ async def log_usage(user_id, username, command, chat_id):
         user_id, username, command, chat_id, datetime.utcnow()
     )
     await conn.close()
+async def add_expense(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    args = context.args
+    if len(args) < 2:
+        await update.meessage.reply_text("Usage: /expense <amount> <category> [description(optional)]")
+    amount = float(args[0])
+    category = args[1]
+    description = " ".join(args[2:]) if len(args) > 2 else ""
+    user_id = update.message.from_user.id
+    conn = await connect_db()
+    await conn.execute(
+        "INSERT INTO expenses (user_id, amount, category, description) VALUES ($1, $2, $3, $4)",
+        user_id, amount, category, description)
+    )
+    await conn.close()
+    await update.message.reply_text(f"Saved {amount} to {category}")
 
+async def  summary(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    period = context.args[0] if context.args else "month"
+    user_id = update.message.from_user.id
+
+    conn = connect_db()
+    if period = "today":
+        query = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date=CURRENT_DATE GROUP BY category"
+    elif period = "week":
+        query = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date >= CURRENT_DATE - INTERVAL '7 days' GROUP BY category"
+    else:
+        query  = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date >= date_trunc('month', CURRENT_DATE) GROUP BY category"
+    rows = await conn.fetch(query, user_id)
+    await conn.close()
+    if not rows :
+        await update.message.reply_text("No expenses found")
+    msg = "\n".join([f"{r['category']}:{r['sum']}" for r in rows])
+    await update.message.reply_text(f"Expenses({period}):\n{msg}")
+import matplotlib.pyplot as plt
+import io
+async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    conn = await connect_db()
+    rows = await conn.fetch("SELECT category, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY category",
+                            user_id)
+    await conn.close()
+
+    if not rows:
+        await update.message.reply_text("No expenses found yet")
+    categories = [r["category"] for r in rows]
+    totals = [float(r["total"]) for r in rows]
+    
+
+    plt.figure(figsize=(5,5))
+    plt.pie(totals, labels=categories, autopct='%1.1f%%', startangle=140)
+    plt.title("Expenses Breakdown")
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf, caption="Here's your expense chart!")
 
 
 # finaly main func
@@ -760,6 +816,9 @@ def main():
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler("send", send_messages))
     app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
+    app.add_handler(CommandHandler('expense',add_expense ))
+    app.add_handler(CommandHandler('summary', summary))
+    app.add_handler(CommandHandler('chart',show_chart ))
     print('Bot is running...')
     app.run_polling()
 import threading
