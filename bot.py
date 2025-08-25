@@ -750,8 +750,9 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2 = io.BytesIO()
     plt.tight_layout()
     plt.savefig(buf2, format='png')
-    plt.seek(0)
+    buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
+    plt.close(fig2)
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
