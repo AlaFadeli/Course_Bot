@@ -744,7 +744,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     fig2, ax2= plt.subplots()
     ax2.plot(days_labels, days_totals, marker='o', linestyle='-', linewidth=2)
     ax2.set_title("Last 7 Days Spending")
-    ax.set_xlabel("Day")
+    ax2.set_xlabel("Day")
     ax2.set_ylabel("Total Spent")
     ax2.grid(True, linestyle='--', alpha=0.5)
     buf2 = io.BytesIO()
