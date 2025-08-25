@@ -696,25 +696,39 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     rows = await conn.fetch("SELECT category, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY category",
                             user_id)
+    rows_months = await conn.fetch("""
+      SELECT DATE_TRUNC('month', date) AS month, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY month ORDER BY month""",
+                                   user_id)
     await conn.close()
-
     if not rows:
         await update.message.reply_text("No expenses found yet")
     categories = [r["category"] for r in rows]
     totals = [float(r["total"]) for r in rows]
+    months = [datetime.strftime(row["month"], "%b%Y") for row in rows_months]
+    months_amounts = [float(row["total"]) for row in rows_months]
     
-
+    #PIE CHART : categories
     plt.figure(figsize=(5,5))
     plt.pie(totals, labels=categories, autopct='%1.1f%%', startangle=140)
-    plt.title("Expenses Breakdown")
-
+    plt.title("Expense Categories Breakdown")
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
     plt.close()
-    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf, caption="Here's your expense chart!")
+    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf, caption="Here's your category chart!")
 
-
+    fig1, ax1 = plt.subplots()
+    ax1.bar(months, month_amounts)
+    ax1.set_title("Monthly Spending")
+    ax1.set_xlabel("Month")
+    ax1.set_ylabel("Total Spent")
+    ax1.tick_params(axis='x', rotation=45)
+    buf1 = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf1, format='png')
+    buf1.seek(0)
+    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf1, caption="Here's your monthly expenses")
+    plt.close(fig1)
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
