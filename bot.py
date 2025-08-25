@@ -742,7 +742,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
 
     #WEEKLY BAR CHART
     fig2, ax2= plt.subplots()
-    aw2.plot(day_labels, day_totals, marker='o', linestyle='-', linewidth=2)
+    ax2.plot(day_labels, day_totals, marker='o', linestyle='-', linewidth=2)
     ax2.set_title("Last 7 Days Spending")
     ax.set_xlabel("Day")
     ax2.set_ylabel("Total Spent")
