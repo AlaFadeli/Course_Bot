@@ -699,9 +699,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows_months = await conn.fetch("""
       SELECT DATE_TRUNC('month', date) AS month, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY month ORDER BY month""",
                                    user_id)
-    rows_overtheweek = await conn.fetch("""
-        SELECT DATE(date) AS day,SUM(amount) AS total FROM expenses WHERE user_id=$1 AND date >= (CURRENT_DATE - INTERVAL '6 days') GROUP BY day ORDER by day
-                                        """)
+    rows_overtheweek = await conn.fetch("""SELECT DATE(date) AS day,SUM(amount) AS total FROM expenses WHERE user_id=$1 AND date >= (CURRENT_DATE - INTERVAL '6 days') GROUP BY day ORDER by day""", user_id)
     
     await conn.close()
     if not rows:
