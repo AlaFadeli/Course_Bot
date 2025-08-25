@@ -648,80 +648,77 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    users = await get_users()
-    for user in users:
-        text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
-        await context.bot.send_message(chat_id=user,
-                                text=text)
-GROUP_ID=-4832691347        
-@registered_only
-async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    await log_usage(update.effective_user.id, update.effective_user.username, "/ask", update.effective_chat.id)
-    if update.effective_chat.type != "private":
-        await update.message.reply_text("Please send your question in a private chat with me.")
-        return
-    if not context.args:
-        await update.message.reply_text("Usage: /ask <your question>")
-        return
-    question_text="".join(context.args)
-    question_id = f"Q{random.randint(100,999)}"
-
-    conn = await connect_db()
-    await conn.execute(
-       "INSERT INTO questions (question_id, question_text, asker_id) VALUES ($1, $2, $3)",
-        question_id, question_text, update.effective_user.id
-    )
-    await conn.close()
-    try:
-        await context.bot.send_message(chat_id=GROUP_ID,
-                                   text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
-        await update.message.reply_text("Your question has been posted anonymously.")
-    except:
-        pass
-async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    if not update.message.reply_to_message:
-        return
-    original_text = update.message.reply_to_message.text
-    if not original_text.startswith("? "):
-        return 
-    question_id = original_text.split("\n", 1)[0].replace("? ", "").replace(":", "").strip()
-    answer_text = update.message.text
-
-    conn = await connect_db()
-    await conn.execute(
-        "INSERT INTO answers (question_id, answer_text, answerer_id) VALUES ($1, $2, $3)",
-        question_id, answer_text,
-        update.effective_user.id
-    )
-    
-    asker_id = await conn.fetchval("SELECT  asker_id FROM questions WHERE question_id = $1",question_id)
-    await conn.close()
-    if asker_id:
-        try:
-            await context.bot.send_message(
-                chat_id=asker_id,
-                text=f"You recieved a NEW answer to your question {question_id}:\n{answer_text}"
-            )
-        except:
-            pass
-async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    if chat_id == -4832691347:
-        
-        bot_id = context.bot.id
-        msg = update.message
-
-        if msg.reply_to_message and msg.reply_to_message_from_user.id == bot_id:
-            await msg.reply_text("Answer accepted , sent to asker ...")
-        else:
-            try:
-                await msg.delete()
-            except Exception as e:
-                print("Failed to delete:", e)
-REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+#async def send_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
+#    users = await get_users()
+#    for user in users:
+#        text ="AI feature is now enabled!!! Use /askai to ask gemini-2-Pro model anything about the uploaded files!!!"                
+#        await context.bot.send_message(chat_id=user,
+#                                text=text)
+#GROUP_ID=-4832691347        
+#@registered_only
+#async def ask_command(update:Update, context:ContextTypes.DEFAULT_TYPE):
+#    await log_usage(update.effective_user.id, update.effective_user.username, "/ask", update.effective_chat.id)
+#    if update.effective_chat.type != "private":
+#        await update.message.reply_text("Please send your question in a private chat with me.")
+#        return
+#    if not context.args:
+#        await update.message.reply_text("Usage: /ask <your question>")
+#        return
+#    question_text="".join(context.args)
+#    question_id = f"Q{random.randint(100,999)}"
+#
+#    conn = await connect_db()
+#    await conn.execute(
+#       "INSERT INTO questions (question_id, question_text, asker_id) VALUES ($1, $2, $3)",
+#        question_id, question_text, update.effective_user.id
+#    )
+#    await conn.close()
+#    try:
+#        await context.bot.send_message(chat_id=GROUP_ID,
+#                                   text=f"? {question_id}:\n{question_text}\n(Reply to this message to answer)")
+#        await update.message.reply_text("Your question has been posted anonymously.")
+#    except:
+#        pass
+#async def handle_group_answers(update:Update, context:ContextTypes.DEFAULT_TYPE):
+#    if not update.message.reply_to_message:
+#        return
+#    original_text = update.message.reply_to_message.text
+#    if not original_text.startswith("? "):
+#        return 
+#    question_id = original_text.split("\n", 1)[0].replace("? ", "").replace(":", "").strip()
+#    answer_text = update.message.text
+#
+#    conn = await connect_db()
+#    await conn.execute(
+#        "INSERT INTO answers (question_id, answer_text, answerer_id) VALUES ($1, $2, $3)",
+#        question_id, answer_text,
+#        update.effective_user.id
+#    )
+#    
+#    asker_id = await conn.fetchval("SELECT  asker_id FROM questions WHERE question_id = $1",question_id)
+#    await conn.close()
+#    if asker_id:
+#        try:
+#            await context.bot.send_message(
+#                chat_id=asker_id,
+#                text=f"You recieved a NEW answer to your question {question_id}:\n{answer_text}"
+#            )
+#        except:
+#            pass
+#async def filter_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
+#    chat_id = update.effective_chat.id
+#    if chat_id == -4832691347:
+#        
+#        bot_id = context.bot.id
+#        msg = update.message
+#
+#        if msg.reply_to_message and msg.reply_to_message_from_user.id == bot_id:
+#            await msg.reply_text("Answer accepted , sent to asker ...")
+#        else:
+#            try:
+#                await msg.delete()
+#            except Exception as e:
+#                print("Failed to delete:", e)
 
 
 async def log_usage(user_id, username, command, chat_id):
@@ -806,17 +803,17 @@ def main():
     app.add_handler(CommandHandler('admin', admin_command))
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
-    app.add_handler(CommandHandler('ask', ask_command))
+#    app.add_handler(CommandHandler('ask', ask_command))
     app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_answers))
     app.add_handler(conv_handler)
     app.post_init = handle_group_answers
     app.post_init = ask_command
     app.post_init = start_scheduler
-    pool = asyncpg.create_pool('DATABASE_URL')
-    app.bot_data['db_pool'] = pool
+#    pool = asyncpg.create_pool('DATABASE_URL')
+#    app.bot_data['db_pool'] = pool
     app.add_handler(CommandHandler("askai", askai))
-    app.add_handler(CommandHandler("send", send_messages))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
+#    app.add_handler(CommandHandler("send", send_messages))
+#    app.add_handler(MessageHandler(filters.ALL & ~filters.StatusUpdate.ALL,filter_messages))
     app.add_handler(CommandHandler('add_expense',add_expense))
     app.add_handler(CommandHandler('summary', summary))
     app.add_handler(CommandHandler('show_chart',show_chart))
