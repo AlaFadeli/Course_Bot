@@ -699,6 +699,10 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows_months = await conn.fetch("""
       SELECT DATE_TRUNC('month', date) AS month, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY month ORDER BY month""",
                                    user_id)
+    rows_overtheweek = await conn.fetch("""
+        "SELECT DATE(date) AS day,SUM(amount) AS total FROM expenses WHERE user_id=$1 AND date >= CURRENT_DATE - INTERVAL '6 days' GROUP BY day ORDER by day"
+                                        """)
+    
     await conn.close()
     if not rows:
         await update.message.reply_text("No expenses found yet")
@@ -706,7 +710,15 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     totals = [float(r["total"]) for r in rows]
     months = [datetime.strftime(row["month"], "%b%Y") for row in rows_months]
     months_amounts = [float(row["total"]) for row in rows_months]
-    
+    days = [row["day"] for row in rows_overtheweek]
+    days_amount = [float(row["total"]) for row in rows_overtheweek]
+    today = datetime.utcnow().date()
+    last7 = [(today - timedelta(days=i)) for i in range(6,-1,-1)]
+    days_labels = [d.strftime('%a %d') for d in last7]
+    days_totals = []
+    data_map = {row["day"]: float(row["total"]) for row in rows_overtheweek}
+    for d in last7:
+        day_totals.append(data_map.get(d,0.0))
     #PIE CHART : categories
     plt.figure(figsize=(5,5))
     plt.pie(totals, labels=categories, autopct='%1.1f%%', startangle=140)
@@ -716,7 +728,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf.seek(0)
     plt.close()
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf, caption="Here's your category chart!")
-
+    #MONTHLY bar chart
     fig1, ax1 = plt.subplots()
     ax1.bar(months, months_amounts)
     ax1.set_title("Monthly Spending")
@@ -729,6 +741,19 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf1.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf1, caption="Here's your monthly expenses")
     plt.close(fig1)
+
+    #WEEKLY BAR CHART
+    fig2, ax2= plt.subplots()
+    aw2.plot(day_labels, day_totals, marker='o', linestyle='-', linewidth=2)
+    ax2.set_title("Last 7 Days Spending")
+    ax.set_xlabel("Day")
+    ax2.set_ylabel("Total Spent")
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    buf2 = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf2, format='png')
+    plt.seek(0)
+    await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
 # finaly main func
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
