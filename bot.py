@@ -804,7 +804,7 @@ def main():
     app.add_handler(CommandHandler('list', list_command))
     app.add_handler(CommandHandler('done', done_command))
 #    app.add_handler(CommandHandler('ask', ask_command))
-    app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_answers))
+#    app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_group_answers))
     app.add_handler(conv_handler)
     app.post_init = handle_group_answers
     app.post_init = ask_command
