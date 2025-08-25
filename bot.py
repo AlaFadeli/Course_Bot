@@ -716,7 +716,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     days_totals = []
     data_map = {row["day"]: float(row["total"]) for row in rows_overtheweek}
     for d in last7:
-        day_totals.append(data_map.get(d,0.0))
+        days_totals.append(data_map.get(d,0.0))
     #PIE CHART : categories
     plt.figure(figsize=(5,5))
     plt.pie(totals, labels=categories, autopct='%1.1f%%', startangle=140)
