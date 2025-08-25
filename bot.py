@@ -718,7 +718,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf, caption="Here's your category chart!")
 
     fig1, ax1 = plt.subplots()
-    ax1.bar(months, month_amounts)
+    ax1.bar(months, months_amounts)
     ax1.set_title("Monthly Spending")
     ax1.set_xlabel("Month")
     ax1.set_ylabel("Total Spent")
