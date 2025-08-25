@@ -676,7 +676,7 @@ async def  summary(update:Update, context:ContextTypes.DEFAULT_TYPE):
     period = context.args[0] if context.args else "month"
     user_id = update.message.from_user.id
 
-    conn = connect_db()
+    conn = await connect_db()
     if period == "today":
         query = "SELECT category, SUM(amount) FROM expenses WHERE user_id=$1 AND date=CURRENT_DATE GROUP BY category"
     elif period == "week":
