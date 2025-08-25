@@ -646,7 +646,7 @@ async def get_users():
     users = await conn.fetch("SELECT user_id FROM verified_users WHERE is_verified = TRUE")
     await conn.close()
     return users
-
+from datetime import timedelta
 
 async def log_usage(user_id, username, command, chat_id):
     conn = await asyncpg.connect(DATABASE_URL)
