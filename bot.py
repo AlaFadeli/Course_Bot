@@ -691,7 +691,7 @@ async def  summary(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Expenses({period}):\n{msg}")
 import matplotlib.pyplot as plt
 import io
-async def show_expense_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     conn = await connect_db()
     rows = await conn.fetch("SELECT category, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY category",
