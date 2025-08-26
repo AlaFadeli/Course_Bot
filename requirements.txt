@@ -11,3 +11,4 @@ python-dotenv
 numpy
 spotipy
 matplotlib 
+pandas
