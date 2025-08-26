@@ -700,7 +700,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
       SELECT DATE_TRUNC('month', date) AS month, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY month ORDER BY month""",
                                    user_id)
     rows_overtheweek = await conn.fetch("""SELECT DATE(date) AS day,SUM(amount) AS total FROM expenses WHERE user_id=$1 AND date >= (CURRENT_DATE - INTERVAL '6 days') GROUP BY day ORDER by day""", user_id)
-    sleep_rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC """, user_id)
+    sleep_rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
     
     await conn.close()
     if not rows:
@@ -754,7 +754,6 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
-    sleep_rows = await conn.fetch("SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC",user_id)
     # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
     df = pd.DataFrame(sleep_rows, columns=["date","amount"])
     return df 
