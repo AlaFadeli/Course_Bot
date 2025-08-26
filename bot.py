@@ -806,7 +806,8 @@ def main():
     app.add_handler(CommandHandler('add_expense',add_expense))
     app.add_handler(CommandHandler('summary', summary))
     app.add_handler(CommandHandler('show_chart',show_expense_chart))
-    app.add_handler(CommandHandler('add_sleep', sleep))
+    app.add_handler(CommandHandler('add_sleep', add_sleep))
+    app.add_handler(CommmandHandler('sleep_chart', sleep_chart))
     print('Bot is running...')
     app.run_polling()
 import threading
