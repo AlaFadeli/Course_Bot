@@ -757,7 +757,7 @@ async def show_expense_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
 import pandas as pd
 async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if context.args < 2 :
+    if len(context.args) < 2 :
         await update.message.reply_text("Usage: /add_sleep [Amount (in hours)] [description (Bad, Good, Normal)]") 
     amount = context.args[0] 
     description = context.args[1]
