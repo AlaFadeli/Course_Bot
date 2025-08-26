@@ -700,7 +700,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
       SELECT DATE_TRUNC('month', date) AS month, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY month ORDER BY month""",
                                    user_id)
     rows_overtheweek = await conn.fetch("""SELECT DATE(date) AS day,SUM(amount) AS total FROM expenses WHERE user_id=$1 AND date >= (CURRENT_DATE - INTERVAL '6 days') GROUP BY day ORDER by day""", user_id)
-    sleep_rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sleep_rows = await conn.fetch("""SELECT DATE(date) AS day, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
     
     await conn.close()
     if not rows:
@@ -712,6 +712,8 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     days = [row["day"] for row in rows_overtheweek]
     days_amount = [float(row["total"]) for row in rows_overtheweek]
     today = datetime.utcnow().date()
+    sleep_days = [row["day"] for row in sleep_rows]
+    sleep_amount = [float(row["amount"] for row in sleep_rows)]
     last7 = [(today - timedelta(days=i)) for i in range(6,-1,-1)]
     days_labels = [d.strftime('%a %d') for d in last7]
     days_totals = []
@@ -741,7 +743,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf1, caption="Here's your monthly expenses")
     plt.close(fig1)
 
-    #WEEKLY BAR CHART
+    #WEEKLY LINE CHART
     fig2, ax2= plt.subplots()
     ax2.plot(days_labels, days_totals, marker='o', linestyle='-', linewidth=2)
     ax2.set_title("Last 7 Days Spending")
@@ -755,21 +757,26 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
     # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
-    df = pd.DataFrame(sleep_rows, columns=["date","amount"])
-    return df 
-    plt.figure(figsize=(8,4))
-    plt.plot(df["date"], df["amount"], marker="o", linestyle="-")
-    plt.title("Sleep tracking")
-    plt.xlabel("Date")
-    plt.ylabel("Hours Slept")
-    plt.grid(True, linestyle='--', alpha=0.5)
+#    df = pd.DataFrame(sleep_rows, columns=["date","amount"])
+#    return df 
+#    plt.figure(figsize=(8,4))
+#    plt.plot(df["date"], df["amount"], marker="o", linestyle="-")
+#    plt.title("Sleep tracking")
+#    plt.xlabel("Date")
+#    plt.ylabel("Hours Slept")
+#    plt.grid(True, linestyle='--', alpha=0.5)
+    fig3, ax3 = plt.subplots()
+    ax2.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
+    ax3.set_title("Sleep tracking graph")
+    ax3.set_xlabel("Day")
+    ax3.set_ylabel("Sleep hours")
+    ax3.grid(True, linestyle='--', alpha=0.5)
     buf3 = io.BytesIO()
     plt.tight_layout()
     plt.savefig(buf3, format='png')
     buf.seek(0)
     await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
-    plt.close()
-# finaly main func
+    plt.close(fig3)
 import pandas as pd
 async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
