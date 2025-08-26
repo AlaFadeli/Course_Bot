@@ -753,6 +753,23 @@ async def show_expense_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
+    sleep_rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC """, user_id)
+    await conn.close()
+    # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
+    df = pd.DataFrame(sleep_rows, columns=["date","amount"])
+    return df 
+    plt.figure(figsize=(8,4))
+    plt.plot(df["date"], df["amount"], marker="o", linestyle="-")
+    plt.title("Sleep tracking")
+    plt.xlabel("Date")
+    plt.ylabel("Hours Slept")
+    plt.grid(True)
+    buf3 = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf3, format='png')
+    buf.seek(0)
+    await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
+    plt.close()
 # finaly main func
 import pandas as pd
 async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
@@ -767,25 +784,6 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
 )
     conn.close()
     await update.message.reply_text("Today's sleep count is saved! ")
-async def sleep_chart(update:Update, Context:ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    conn = await connect_db()
-    rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC """, user_id)
-    await conn.close()
-    # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
-    df = pd.DataFrame(rows, columns=["date","amount"])
-    return df 
-    plt.figure(figsize=(8,4))
-    plt.plot(df["date"], df["amount"], marker="o", linestyle="-")
-    plt.title("Sleep tracking")
-    plt.xlabel("Date")
-    plt.ylabel("Hours Slept")
-    plt.grid(True)
-    buf = io.BytesIO()
-    plt.tight_layout()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    await context.bot.send_photo(chat_id=user_id,photo=buf, caption="Here's your sleep report for the last days")
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
@@ -805,9 +803,8 @@ def main():
     app.add_handler(CommandHandler("askai", askai))
     app.add_handler(CommandHandler('add_expense',add_expense))
     app.add_handler(CommandHandler('summary', summary))
-    app.add_handler(CommandHandler('show_chart',show_expense_chart))
+    app.add_handler(CommandHandler('show_chart',show_chart))
     app.add_handler(CommandHandler('add_sleep', add_sleep))
-    app.add_handler(CommandHandler('sleep_chart', sleep_chart))
     print('Bot is running...')
     app.run_polling()
 import threading
