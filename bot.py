@@ -766,7 +766,7 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
                  user_id, amount, description
 )
     conn.close()
-    update.message.reply_text("Today's sleep count is saved! ")
+    await update.message.reply_text("Today's sleep count is saved! ")
 async def sleep_chart(update:Update, Context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     conn = await connect_db()
