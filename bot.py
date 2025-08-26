@@ -754,7 +754,7 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
-    sleep_rows = await conn.fetch("""SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC """, user_id)
+    sleep_rows = await conn.fetch("SELECT date, amount FROM sleep WHERE user_id=$1 ORDER BY date ASC",user_id)
     # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
     df = pd.DataFrame(sleep_rows, columns=["date","amount"])
     return df 
