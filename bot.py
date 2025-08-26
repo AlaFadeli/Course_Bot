@@ -782,7 +782,7 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if len(context.args) < 2 :
         await update.message.reply_text("Usage: /add_sleep [Amount (in hours)] [description (Bad, Good, Normal)]") 
-    amount = context.args[0] 
+    amount = float(context.args[0]) 
     description = context.args[1]
     conn = await connect_db()
     await conn.execute("INSERT INTO sleep(user_id, amount, description) VALUES ($1, $2, $3)",
