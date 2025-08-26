@@ -789,7 +789,7 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
                  user_id, amount, description
 )
     conn.close()
-    await update.message.reply_text("Today's sleep count is saved! ")
+    await update.message.reply_text("Today's sleep count is saved! .. ")
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
