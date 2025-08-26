@@ -712,8 +712,8 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     days = [row["day"] for row in rows_overtheweek]
     days_amount = [float(row["total"]) for row in rows_overtheweek]
     today = datetime.utcnow().date()
-    sleep_days = [row["day"] for row in sleep_rows]
-    sleep_amount = [float(row["amount"] for row in sleep_rows)]
+    sleep_days = [float(row["day"]) for row in sleep_rows]
+    sleep_amount = [float(row["amount"]) for row in sleep_rows]
     last7 = [(today - timedelta(days=i)) for i in range(6,-1,-1)]
     days_labels = [d.strftime('%a %d') for d in last7]
     days_totals = []
