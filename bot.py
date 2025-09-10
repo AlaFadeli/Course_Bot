@@ -693,7 +693,7 @@ import matplotlib.pyplot as plt
 import io
 async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-    conn = await connect_db()
+G    conn = await connect_db()
     rows = await conn.fetch("SELECT category, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY category",
                             user_id)
     rows_months = await conn.fetch("""
@@ -756,15 +756,6 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
-    # LETS CONVERT THE DATA TO DATA FRAME FOR EASY CHARTING
-#    df = pd.DataFrame(sleep_rows, columns=["date","amount"])
-#    return df 
-#    plt.figure(figsize=(8,4))
-#    plt.plot(df["date"], df["amount"], marker="o", linestyle="-")
-#    plt.title("Sleep tracking")
-#    plt.xlabel("Date")
-#    plt.ylabel("Hours Slept")
-#    plt.grid(True, linestyle='--', alpha=0.5)
     fig3, ax3 = plt.subplots()
     ax2.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
     ax3.set_title("Sleep tracking graph")
@@ -775,6 +766,8 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     plt.tight_layout()
     plt.savefig(buf3, format='png')
     buf.seek(0)
+    if fig3:
+        await update.message.reply_text("There is a real plot")
     await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
     plt.close(fig3)
 import pandas as pd
@@ -790,6 +783,19 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
 )
     conn.close()
     await update.message.reply_text("Today's sleep count is saved! .. ")
+async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if len(context.ars) < 3 :
+        await update.message.reply_text("Usage: /add_sport [amount in mins] [laps (int)] [average impression (Good or Bad)]")
+    amount = float(context.args[0])
+    description = context.args[2]
+    laps = float(context.args[1])
+    conn = await connect_db()
+    await conn.execute("INSERT INTO sport(user_id,amount,description,laps) VALUES ($1, $2, $3)",
+                       user_id, amount, description, laps)
+    conn.close()
+    await update.message.reply_text("Today's sport session saved! ..")
+
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
@@ -811,6 +817,7 @@ def main():
     app.add_handler(CommandHandler('summary', summary))
     app.add_handler(CommandHandler('show_chart',show_chart))
     app.add_handler(CommandHandler('add_sleep', add_sleep))
+    app.add_handler(CommandHandler('add_sport', add_sport))
     print('Bot is running...')
     app.run_polling()
 import threading
