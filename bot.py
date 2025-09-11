@@ -768,6 +768,7 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn.close()
 
 async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     conn = await connect_db()
 
     sleep_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
