@@ -776,7 +776,7 @@ async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     sleep_amount = [float(row["amount"]) for row in sleep_rows]
     conn.close()
     fig3, ax3 = plt.subplots()
-    ax2.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
+    ax3.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
     ax3.set_title("Sleep tracking graph")
     ax3.set_xlabel("Day")
     ax3.set_ylabel("Sleep hours")
