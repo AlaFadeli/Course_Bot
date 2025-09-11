@@ -693,7 +693,7 @@ import matplotlib.pyplot as plt
 import io
 async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
-G    conn = await connect_db()
+    conn = await connect_db()
     rows = await conn.fetch("SELECT category, SUM(amount) AS total FROM expenses WHERE user_id=$1 GROUP BY category",
                             user_id)
     rows_months = await conn.fetch("""
