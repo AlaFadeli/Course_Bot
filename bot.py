@@ -712,8 +712,6 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     days = [row["day"] for row in rows_overtheweek]
     days_amount = [float(row["total"]) for row in rows_overtheweek]
     today = datetime.utcnow().date()
-    sleep_days = [row["day"] for row in sleep_rows]
-    sleep_amount = [float(row["amount"]) for row in sleep_rows]
     last7 = [(today - timedelta(days=i)) for i in range(6,-1,-1)]
     days_labels = [d.strftime('%a %d') for d in last7]
     days_totals = []
@@ -756,6 +754,24 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf2.seek(0)
     await context.bot.send_photo(chat_id=update.effective_chat.id, photo=buf2, caption="Here's your last 7 days spending report")
     plt.close(fig2)
+import pandas as pd
+async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if len(context.args) < 2 :
+        await update.message.reply_text("Usage: /add_sleep [Amount (in hours)] [description (Bad, Good, Normal)]") 
+    amount = float(context.args[0]) 
+    description = context.args[1]
+    conn = await connect_db()
+    await conn.execute("INSERT INTO sleep(user_id, amount, description) VALUES ($1, $2, $3)",
+                 user_id, amount, description
+)
+    conn.close()
+
+async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    sleep_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sleep_days = [row["day"] for row in sleep_rows]
+    sleep_amount = [float(row["amount"]) for row in sleep_rows]
+
     fig3, ax3 = plt.subplots()
     ax2.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
     ax3.set_title("Sleep tracking graph")
@@ -770,18 +786,6 @@ async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("There is a real plot")
     await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
     plt.close(fig3)
-import pandas as pd
-async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if len(context.args) < 2 :
-        await update.message.reply_text("Usage: /add_sleep [Amount (in hours)] [description (Bad, Good, Normal)]") 
-    amount = float(context.args[0]) 
-    description = context.args[1]
-    conn = await connect_db()
-    await conn.execute("INSERT INTO sleep(user_id, amount, description) VALUES ($1, $2, $3)",
-                 user_id, amount, description
-)
-    conn.close()
     await update.message.reply_text("Today's sleep count is saved! .. ")
 async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -818,6 +822,7 @@ def main():
     app.add_handler(CommandHandler('show_chart',show_chart))
     app.add_handler(CommandHandler('add_sleep', add_sleep))
     app.add_handler(CommandHandler('add_sport', add_sport))
+    app.add_handler(CommandHandler('show_sleep', show_sleep))
     print('Bot is running...')
     app.run_polling()
 import threading
