@@ -768,10 +768,12 @@ async def add_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn.close()
 
 async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    conn = await connect_db()
+
     sleep_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sleep WHERE user_id=$1 ORDER BY date ASC""", user_id)
     sleep_days = [row["day"] for row in sleep_rows]
     sleep_amount = [float(row["amount"]) for row in sleep_rows]
-
+    conn.close()
     fig3, ax3 = plt.subplots()
     ax2.plot(sleep_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
     ax3.set_title("Sleep tracking graph")
