@@ -784,9 +784,7 @@ async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf3 = io.BytesIO()
     plt.tight_layout()
     plt.savefig(buf3, format='png')
-    buf.seek(0)
-    if fig3:
-        await update.message.reply_text("There is a real plot")
+    buf3.seek(0)
     await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
     plt.close(fig3)
     await update.message.reply_text("Today's sleep count is saved! .. ")
