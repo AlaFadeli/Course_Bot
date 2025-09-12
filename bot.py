@@ -844,6 +844,17 @@ async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     await conn.execute("INSERT INTO study(user_id, amount, description) VALUES ($1, $2, $3)", user_id, amount, description)
     await update.reply_text("Study data saved to the database...")
+async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    conn = connect_db()
+    verified_ids = conn.execute("""SELECT user_id as user_id from verified_users""")
+    user_id = update.effective_user.id
+    message = "Hello everyone, this is a welcoming message from the bot's admin..."
+    for chat_id in verified_ids:
+        try:
+            bot.send_message(chat_id,message)
+        except Exception as e:
+            print(f"Failed to send to {chat_id}: {e}")
+
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
@@ -869,6 +880,7 @@ def main():
     app.add_handler(CommandHandler('show_sleep', show_sleep))
     app.add_handler(CommandHandler('add_study', add_study))
     app.add_handler(CommandHandler('show_sport', show_sport))
+    app.add_handler(CommandHandler('broadcast', broadcast))
     print('Bot is running...')
     app.run_polling()
 import threading
