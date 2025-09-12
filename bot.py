@@ -802,7 +802,7 @@ async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
 async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id 
     conn = await connect_db()
-    sport_rows await conn.execute("""SELECT DATE(date) AS day, amount AS amount FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sport_rows = conn.execute("""SELECT DATE(date) AS day, amount AS amount FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
     sport_days = [row["day"] for row in sport_rows]
     sport_amount = [float(row["amount"]) for row in sport_rows]
     conn.close()
@@ -818,7 +818,7 @@ async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf.seek(0)
     await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sleep report for the last days")
     plt.close(fig)
-    laps_rows = await conn.execute("""SELECT DATE(date) AS day, laps AS laps FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    laps_rows = conn.execute("""SELECT DATE(date) AS day, laps AS laps FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
     sport_laps = [float(row["laps"]) for row in laps_rows]
     laps_days = [row["day"] for row in sport_laps]
     conn.close()
