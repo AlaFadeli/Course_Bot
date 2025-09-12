@@ -787,7 +787,6 @@ async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf3.seek(0)
     await context.bot.send_photo(chat_id=user_id,photo=buf3, caption="Here's your sleep report for the last days")
     plt.close(fig3)
-    await update.message.reply_text("Today's sleep count is saved! .. ")
 async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if len(context.ars) < 3 :
@@ -800,7 +799,51 @@ async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
                        user_id, amount, description, laps)
     conn.close()
     await update.message.reply_text("Today's sport session saved! ..")
+async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id 
+    conn = await connect_db()
+    sport_rows await conn.execute("""SELECT DATE(date) AS day, amount AS amount FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sport_days = [row["day"] for row in sport_rows]
+    sport_amount = [float(row["amount"]) for row in sport_rows]
+    conn.close()
+    fig,ax= plt.subplots()
+    ax.plot(sport_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
+    ax.set_title("Sport tracking graph")
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Sport mins")
+    ax.grid(True,linestyle='--', alpha=0.5)
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sleep report for the last days")
+    plt.close(fig)
+    laps_rows = await conn.execute("""SELECT DATE(date) AS day, laps AS laps FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sport_laps = [float(row["laps"]) for row in laps_rows]
+    laps_days = [row["day"] for row in sport_laps]
+    conn.close()
+    fig2,ax2 = plt.subplots()
+    ax2.plot(laps_days, sport_laps, marker='o', linestyle='-', linewidth=2)
+    ax2.set_title("Sport tracking graph")
+    ax2.set_xlabel("Day")
+    ax2.set_ylabel("Sport laps")
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    buf2 = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf2, format='png')
+    buf2.seek(0)
+    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sleep report for the last days")
+    plt.close(fig2)
 
+async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if context.args < 2:
+        update.message.reply_text("Usage: /add_study [AMOUNT (in hours)] [General impression: effecient,weak... ] ")
+    amount = context.args[0]
+    description = context.args[1]
+    conn = await connect_db()
+    await conn.execute("INSERT INTO study(user_id, amount, description) VALUES ($1, $2, $3)", user_id, amount, description)
+    await update.reply_text("Study data saved to the database...")
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
     # handlers inserting
@@ -824,6 +867,8 @@ def main():
     app.add_handler(CommandHandler('add_sleep', add_sleep))
     app.add_handler(CommandHandler('add_sport', add_sport))
     app.add_handler(CommandHandler('show_sleep', show_sleep))
+    app.add_handler(CommandHandler('add_study', add_study))
+    app.add_handler(CommandHandler('show_sport', show_sport))
     print('Bot is running...')
     app.run_polling()
 import threading
