@@ -853,6 +853,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     for chat_id in user_ids:
         try:
             bot.send_message(chat_id,message)
+            print("Message sent!")
         except Exception as e:
             print(f"Failed to send to {chat_id}: {e}")
 
