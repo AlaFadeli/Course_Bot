@@ -802,7 +802,7 @@ async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
 async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id 
     conn = await connect_db()
-    sport_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+    sport_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sports WHERE user_id=$1 ORDER BY date ASC""", user_id)
     sport_days = [row["day"] for row in sport_rows]
     sport_amount = [float(row["amount"]) for row in sport_rows]
     conn.close()
