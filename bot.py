@@ -845,7 +845,7 @@ async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await conn.execute("INSERT INTO study(user_id, amount, description) VALUES ($1, $2, $3)", user_id, amount, description)
     await update.reply_text("Study data saved to the database...")
 async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
-    conn = connect_db()
+    conn = await connect_db()
     rows =  await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
