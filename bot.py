@@ -846,10 +846,11 @@ async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await update.reply_text("Study data saved to the database...")
 async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = connect_db()
-    verified_ids =  await conn.fetch("SELECT user_id from verified_users")
+    rows =  await conn.fetch("SELECT user_id from verified_users")
+    user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
     message = "Hello everyone, this is a welcoming message from the bot's admin..."
-    for chat_id in verified_ids:
+    for chat_id in user_ids:
         try:
             bot.send_message(chat_id,message)
         except Exception as e:
