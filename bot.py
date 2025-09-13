@@ -852,7 +852,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     message = "Hello everyone, this is a welcoming message from the bot's admin..."
     for chat_id in user_ids:
         try:
-            bot.send_message(chat_id,message)
+            context.bot.send_message(chat_id,message)
             print("Message sent!")
         except Exception as e:
             print(f"Failed to send to {chat_id}: {e}")
