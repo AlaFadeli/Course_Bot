@@ -849,7 +849,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows =  await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
-    message = "Hello everyone, this is a welcoming message from the bot's admin..."
+    message = "Hello everyone, Please share this bot to your friends from ENP so it gets more popular and then effective !!!"
     for chat_id in user_ids:
         try:
             await context.bot.send_message(chat_id,message)
