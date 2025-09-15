@@ -795,7 +795,7 @@ async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     description = context.args[2]
     laps = float(context.args[1])
     conn = await connect_db()
-    await conn.execute("INSERT INTO sport(user_id,amount,description,laps) VALUES ($1, $2, $3)",
+    await conn.execute("INSERT INTO sports(user_id,amount,description,laps) VALUES ($1, $2, $3)",
                        user_id, amount, description, laps)
     conn.close()
     await update.message.reply_text("Today's sport session saved! ..")
