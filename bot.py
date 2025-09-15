@@ -849,25 +849,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows =  await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
-    message = """Hello everyone, Please share this bot to your friends from ENP so it gets more popular and then effective !!!Hello everyone! 👋
-Here are all the commands you can use with the ENP Course Material Bot, and what each one does:
-
-📚 Bot Commands
-
-/start - Sends a welcome message and initiates interaction with the bot.
-/help - Displays the help menu — shows a list of available commands.
-/register - Register your account using your ENP email so you can access all features.
-/upload <module> <category> - Upload a file to the bot, tagging it under a specific module and category. (Admins only)
-/done - Signifies you’ve finished uploading files — resets the upload state.
-/get <module> <category> - Retrieves all files saved under the specified module and category.
-/delete <filename> - Deletes a file by its name. (Admins only)
-/search <keyword> - Searches the database for files whose names or descriptions match the keyword.
-/askai <question> - Ask the built-in Gemini-2-Pro model anything about the files in the database — useful for summaries, explanations, etc.
-/credits - Shows who built the bot + contact information.
-
-If you’re ever unsure — type /help at any time to see this list again.  
-
-Enjoy using the bot, and good luck with your studies! 🎯"""
+    message = "File uploading (New Courses, TD's and Exams) will take place once the academic year starts, you will be able to use AI on any file uploaded in the database; like you can ask the AI to summarize a peace of content or help you understand a TD's solution; in this matter please consider avoiding huge files when using /askai, it may crash or give unwanted outputs.\nIf any of this is unclear you can contact me via email."
     for chat_id in user_ids:
         try:
             await context.bot.send_message(chat_id,message)
