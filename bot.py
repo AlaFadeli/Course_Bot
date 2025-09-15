@@ -849,7 +849,25 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows =  await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
-    message = "Hello everyone, Please share this bot to your friends from ENP so it gets more popular and then effective !!!"
+    message = """Hello everyone, Please share this bot to your friends from ENP so it gets more popular and then effective !!!Hello everyone! 👋
+Here are all the commands you can use with the ENP Course Material Bot, and what each one does:
+
+📚 Bot Commands
+
+/start - Sends a welcome message and initiates interaction with the bot.
+/help - Displays the help menu — shows a list of available commands.
+/register - Register your account using your ENP email so you can access all features.
+/upload <module> <category> - Upload a file to the bot, tagging it under a specific module and category. (Admins only)
+/done - Signifies you’ve finished uploading files — resets the upload state.
+/get <module> <category> - Retrieves all files saved under the specified module and category.
+/delete <filename> - Deletes a file by its name. (Admins only)
+/search <keyword> - Searches the database for files whose names or descriptions match the keyword.
+/askai <question> - Ask the built-in Gemini-2-Pro model anything about the files in the database — useful for summaries, explanations, etc.
+/credits - Shows who built the bot + contact information.
+
+If you’re ever unsure — type /help at any time to see this list again.  
+
+Enjoy using the bot, and good luck with your studies! 🎯"""
     for chat_id in user_ids:
         try:
             await context.bot.send_message(chat_id,message)
