@@ -789,7 +789,7 @@ async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     plt.close(fig3)
 async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if len(context.ars) < 3 :
+    if len(context.args) < 3 :
         await update.message.reply_text("Usage: /add_sport [amount in mins] [laps (int)] [average impression (Good or Bad)]")
     amount = float(context.args[0])
     description = context.args[2]
