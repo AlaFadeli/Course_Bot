@@ -858,7 +858,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
             print(f"Failed to send to {chat_id}: {e}")
             
 from newsapi import NewsApiClient
-async def news(update:Update, context:ContextTyoes.DEFAULT_TYPE):
+async def news(update:Update, context:ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_user.id
     api = NewsApiClient(api_key="2cba450c5bea425aa649f4c4ec5c6a58")
     tech_news = api.get_everything(
