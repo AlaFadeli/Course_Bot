@@ -856,6 +856,21 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
             print("Message sent!")
         except Exception as e:
             print(f"Failed to send to {chat_id}: {e}")
+            
+from newsapi import NewsApiClient
+async def news(update:Update, context:ContextTyoes.DEFAULT_TYPE):
+    chat_id = update.effective_user.id
+    api = NewsApiClient(api_key="2cba450c5bea425aa649f4c4ec5c6a58")
+    tech_news = api.get_everything(
+        q="technology OR computer science OR engineering",
+        language="en",
+        sort_by="publishedAt",
+        page_size=5
+    )
+    for i, article in enumerate(tech_news["articles"], start=1):
+        caption=f"{i}. {article['title']} ({article['source']['name']})\n{article["description"]}"
+        context.bot.send_photo(chat_id=chat_id,photo=article["urlToImage"],caption=caption)
+
 
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
