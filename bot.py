@@ -858,19 +858,31 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
             print(f"Failed to send to {chat_id}: {e}")
             
 from newsapi import NewsApiClient
-async def news(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send the five most recent technology‑related articles."""
     chat_id = update.effective_user.id
+
+    # News API client is synchronous – fine for a short request
     api = NewsApiClient(api_key="2cba450c5bea425aa649f4c4ec5c6a58")
     tech_news = api.get_everything(
         q="technology OR computer science OR engineering",
         language="en",
         sort_by="publishedAt",
-        page_size=5
+        page_size=5,
     )
-    for i, article in enumerate(tech_news["articles"], start=1):
-        caption=f"{i}. {article['title']} ({article['source']['name']})\n{article["description"]}"
-        context.bot.send_photo(chat_id=chat_id,photo=article["urlToImage"],caption=caption)
 
+    for i, article in enumerate(tech_news["articles"], start=1):
+        # Guard against missing image URLs
+        photo = article.get("urlToImage")
+        if not photo:
+            continue  # skip articles without an image
+
+        caption = f"{i}. {article['title']} ({article['source']['name']})\n{article.get('description', '')}"
+        # `send_photo` is an async method – use await
+        await context.bot.send_photo(chat_id=chat_id, photo=photo, caption=caption)
+
+        # Optional logging for debugging
+        print(article)
 
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
