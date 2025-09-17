@@ -837,7 +837,7 @@ async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
 
 async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if context.args < 2:
+    if len(context.args) < 2:
         update.message.reply_text("Usage: /add_study [AMOUNT (in hours)] [General impression: effecient,weak... ] ")
     amount = context.args[0]
     description = context.args[1]
