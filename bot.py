@@ -789,51 +789,85 @@ async def show_sleep(update:Update, context:ContextTypes.DEFAULT_TYPE):
     plt.close(fig3)
 async def add_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    if len(context.args) < 3 :
-        await update.message.reply_text("Usage: /add_sport [amount in mins] [laps (int)] [average impression (Good or Bad)]")
+    if len(context.args) < 3:
+        await update.message.reply_text(
+            "Usage: /add_sport [amount in mins] [laps (int)] [average impression (Good or Bad)]"
+        )
+        return
     amount = float(context.args[0])
+    laps = int(context.args[1])
     description = context.args[2]
-    laps = float(context.args[1])
+
     conn = await connect_db()
-    await conn.execute("INSERT INTO sports(user_id,amount,description,laps) VALUES ($1, $2, $3)",
-                       user_id, amount, description, laps)
-    conn.close()
-    await update.message.reply_text("Today's sport session saved! ..")
+    await conn.execute(
+        """
+        INSERT INTO sports(user_id, amount, description, laps)
+        VALUES ($1, $2, $3, $4)
+        """,
+        user_id,
+        amount,
+        description,
+        laps,
+    )
+    await conn.close()
+    await update.message.reply_text("Today's sport session saved! …")
 async def show_sport(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id 
     conn = await connect_db()
-    sport_rows = await conn.fetch("""SELECT DATE(date) AS day, amount AS amount FROM sports WHERE user_id=$1 ORDER BY date ASC""", user_id)
+
+    # Minutes plot
+    sport_rows = await conn.fetch(
+        """
+        SELECT DATE(date) AS day, amount
+        FROM sports
+        WHERE user_id = $1
+        ORDER BY date ASC
+        """,
+        user_id,
+    )
     sport_days = [row["day"] for row in sport_rows]
     sport_amount = [float(row["amount"]) for row in sport_rows]
-    conn.close()
-    fig,ax= plt.subplots()
-    ax.plot(sport_days, sleep_amount, marker='o', linestyle='-', linewidth=2)
+
+    fig, ax = plt.subplots()
+    ax.plot(sport_days, sport_amount, marker="o", linestyle="-", linewidth=2)
     ax.set_title("Sport tracking graph")
     ax.set_xlabel("Day")
     ax.set_ylabel("Sport mins")
-    ax.grid(True,linestyle='--', alpha=0.5)
+    ax.grid(True, linestyle="--", alpha=0.5)
     buf = io.BytesIO()
     plt.tight_layout()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format="png")
     buf.seek(0)
-    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sleep report for the last days")
+    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sport report for the last days")
     plt.close(fig)
-    laps_rows = await conn.fetch("""SELECT DATE(date) AS day, laps AS laps FROM sport WHERE user_id=$1 ORDER BY date ASC""", user_id)
+
+    # Laps plot
+    laps_rows = await conn.fetch(
+        """
+        SELECT DATE(date) AS day, laps
+        FROM sports
+        WHERE user_id = $1
+        ORDER BY date ASC
+        """,
+        user_id,
+    )
+    laps_days = [row["day"] for row in laps_rows]
     sport_laps = [float(row["laps"]) for row in laps_rows]
-    laps_days = [row["day"] for row in sport_laps]
-    conn.close()
-    fig2,ax2 = plt.subplots()
-    ax2.plot(laps_days, sport_laps, marker='o', linestyle='-', linewidth=2)
-    ax2.set_title("Sport tracking graph")
+
+    fig2, ax2 = plt.subplots()
+    ax2.plot(laps_days, sport_laps, marker="o", linestyle="-", linewidth=2)
+    ax2.set_title("Sport laps tracking graph")
     ax2.set_xlabel("Day")
     ax2.set_ylabel("Sport laps")
-    ax2.grid(True, linestyle='--', alpha=0.5)
+    ax2.grid(True, linestyle="--", alpha=0.5)
     buf2 = io.BytesIO()
     plt.tight_layout()
-    plt.savefig(buf2, format='png')
+    plt.savefig(buf2, format="png")
     buf2.seek(0)
-    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your sleep report for the last days")
+    await context.bot.send_photo(chat_id=user_id, photo=buf2, caption="Laps overview for the last days")
     plt.close(fig2)
+
+    await conn.close()
 
 async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
