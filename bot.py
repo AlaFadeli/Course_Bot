@@ -947,6 +947,45 @@ async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Optional logging for debugging
         print(article)
+import aiohttp
+ARXIV_API = "http://export.arxiv.org/api/query?search_query=all:{}&start=0&max_results=3"
+async def arxiv_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /arxiv <keyword>")
+        return
+
+    query = " ".join(context.args)
+    url = ARXIV_API.format(query)
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                data = await resp.text()
+
+        # arXiv returns Atom XML, we'll parse manually (lightweight)
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(data)
+
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        entries = root.findall("atom:entry", ns)
+
+        if not entries:
+            await update.message.reply_text("No papers found for that query.")
+            return
+
+        reply = f"📑 *Latest arXiv papers on* `{query}`:\n\n"
+        for entry in entries:
+            title = entry.find("atom:title", ns).text.strip()
+            summary = entry.find("atom:summary", ns).text.strip().replace("\n", " ")
+            link = entry.find("atom:id", ns).text.strip()
+            authors = [a.text for a in entry.findall("atom:author/atom:name", ns)]
+            author_str = ", ".join(authors[:3]) + (" et al." if len(authors) > 3 else "")
+
+            reply += f"🔹 *{title}*\n👤 {author_str}\n📄 {link}\n📝 {summary[:300]}...\n\n"
+
+        await update.message.reply_text(reply, parse_mode="Markdown")
+    except Exception as e:
+        await update.message.reply_text(f"Error fetching papers: {e}")
 
 def main():
     app = ApplicationBuilder().token(API_TOKEN).build()
