@@ -878,6 +878,36 @@ async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     await conn.execute("INSERT INTO study(user_id, amount, description) VALUES ($1, $2, $3)", user_id, amount, description)
     await update.reply_text("Study data saved to the database...")
+async def show_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    conn = await connect_db()
+    study_rows = await conn.fetch(
+        """
+        SELECT DATE(date) AS day, amount
+        FROM study
+        WHERE user_id = $1
+        ORDER BY date ASC
+        """,
+        user_id,
+    )
+    study_days = [row["day"] for row in study_rows]
+    study_amount = [float(row["amount"]) for row in study_rows]
+    fig, ax = plt.subplots()
+    ax.plot(study_days, study_amount, marker="o", linestyle="-", linewidth=2)
+    ax.set_title("Study tracking graph")
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Study hours")
+    ax.grid(True, linestyle="--", alpha=0.5)
+    buf = io.BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your study report for the last days")
+    plt.close(fig)
+    
+
+
+
 async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     rows =  await conn.fetch("SELECT user_id from verified_users")
