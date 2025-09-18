@@ -700,8 +700,9 @@ async def  summary(update:Update, context:ContextTypes.DEFAULT_TYPE):
     await conn.close()
     if not rows :
         await update.message.reply_text("No expenses found")
-    msg = "\n".join([f"{r['category']}:{r['sum']}" for r in rows])
-    await update.message.reply_text(f"Expenses({period}):\n{msg}")
+    else:    
+        msg = "\n".join([f"{r['category']}:{r['sum']}" for r in rows])
+        await update.message.reply_text(f"Expenses({period}):\n{msg}")
 import matplotlib.pyplot as plt
 import io
 async def show_chart(update:Update, context:ContextTypes.DEFAULT_TYPE):
