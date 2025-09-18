@@ -13,3 +13,4 @@ spotipy
 matplotlib 
 pandas
 newsapi-python
+aiohttp
