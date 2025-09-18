@@ -877,7 +877,7 @@ async def add_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     description = context.args[1]
     conn = await connect_db()
     await conn.execute("INSERT INTO study(user_id, amount, description) VALUES ($1, $2, $3)", user_id, amount, description)
-    await update.reply_text("Study data saved to the database...")
+    await context.reply_text("Study data saved to the database...")
 async def show_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     conn = await connect_db()
@@ -904,10 +904,6 @@ async def show_study(update:Update, context:ContextTypes.DEFAULT_TYPE):
     buf.seek(0)
     await context.bot.send_photo(chat_id=user_id, photo=buf, caption="Here's your study report for the last days")
     plt.close(fig)
-    
-
-
-
 async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     rows =  await conn.fetch("SELECT user_id from verified_users")
@@ -1015,6 +1011,7 @@ def main():
     app.add_handler(CommandHandler('broadcast', broadcast))
     app.add_handler(CommandHandler('news', news))
     app.add_handler(CommandHandler('arxiv', arxiv_command))
+    app.add_handler(CommandHandler('show_study', show_study))
     print('Bot is running...')
     app.run_polling()
 import threading
