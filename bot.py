@@ -1014,6 +1014,7 @@ def main():
     app.add_handler(CommandHandler('show_sport', show_sport))
     app.add_handler(CommandHandler('broadcast', broadcast))
     app.add_handler(CommandHandler('news', news))
+    app.add_handler(CommandHandler('arxiv', arxiv_command))
     print('Bot is running...')
     app.run_polling()
 import threading
