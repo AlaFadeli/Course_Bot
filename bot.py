@@ -923,7 +923,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
     rows =  await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
     user_id = update.effective_user.id
-    message = "File uploading (New Courses, TD's and Exams) will take place once the academic year starts, you will be able to use AI on any file uploaded in the database; like you can ask the AI to summarize a peace of content or help you understand a TD's solution; in this matter please consider avoiding huge files when using /askai, it may crash or give unwanted outputs.\nIf any of this is unclear you can contact me via email."
+    message = "Hello users, note that the /askai command takes two arguments; filename and question.... so you must type /askai filename question"
     for chat_id in user_ids:
         try:
             await context.bot.send_message(chat_id,message)
