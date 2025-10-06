@@ -930,7 +930,7 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
             print("Message sent!")
         except Exception as e:
             print(f"Failed to send to {chat_id}: {e}")
-async def send(update:Update, context:ContextTypes.DEFAULT_TYPE)
+async def send(update:Update, context:ContextTypes.DEFAULT_TYPE):
     conn = await connect_db()
     rows = await conn.fetch("SELECT user_id from verified_users")
     user_ids = [row["user_id"] for row in rows]
