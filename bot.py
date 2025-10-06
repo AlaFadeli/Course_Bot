@@ -942,7 +942,7 @@ async def send(update:Update, context:ContextTypes.DEFAULT_TYPE):
 
         msg = update.message
         if msg.from_user.id == chat_id:
-            await context.bot.forward_message(chat_id=chat_id, from_chat_id=message.chat_id,message_id=msg.message_id)
+            await context.bot.forward_message(chat_id=chat_id, from_chat_id=chat_id,message_id=msg.message_id)
 from newsapi import NewsApiClient
 async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send the five most recent technology‑related articles."""
