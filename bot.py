@@ -937,7 +937,7 @@ async def send(update:Update, context:ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     message = "Hey, small world — didn’t expect to find you in my bot’s user list too 😅 Thanks again for rescuing my Rocketbook"
     for chat_id in user_ids:
-        if chat_id == 5655037405:
+        if chat_id == 8052536183:
             await context.bot.send_message(chat_id,message)
 
         msg = update.message
