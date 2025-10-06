@@ -930,7 +930,15 @@ async def broadcast(update:Update, context:ContextTypes.DEFAULT_TYPE):
             print("Message sent!")
         except Exception as e:
             print(f"Failed to send to {chat_id}: {e}")
-            
+async def send(update:Update, context:ContextTypes.DEFAULT_TYPE)
+    conn = await connect_db()
+    rows = await conn.fetch("SELECT user_id from verified_users")
+    user_ids = [row["user_id"] for row in rows]
+    user_id = update.effective_user.id
+    message = "Hey, small world — didn’t expect to find you in my bot’s user list too 😅 Thanks again for rescuing my Rocketbook"
+    for chat_id in user_ids:
+        if chat_id == 5655037405:
+            await context.bot.send_message(chat_id,message)
 from newsapi import NewsApiClient
 async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send the five most recent technology‑related articles."""
